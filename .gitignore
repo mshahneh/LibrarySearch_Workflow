@@ -3,3 +3,6 @@
 *credentials
 *.mgf
 *.mzML
+work
+nf_output
+*.nextflow*
