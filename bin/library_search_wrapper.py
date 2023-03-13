@@ -88,6 +88,7 @@ def main():
     parser.add_argument('result_folder', help='output folder for results')
     parser.add_argument('convert_binary', help='conversion binary')
     parser.add_argument('librarysearch_binary', help='librarysearch_binary')
+    
     args = parser.parse_args()
 
     temp_folder = "temp"
@@ -101,6 +102,8 @@ def main():
         os.mkdir(tempresults_folder)
     except:
         print("folder error")
+
+    print(args)
 
     # performing the search
 
