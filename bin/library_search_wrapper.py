@@ -7,6 +7,7 @@ import os
 import json
 import argparse
 import uuid
+import pandas as pd
 from collections import defaultdict
 
 def chunks(l, n):
@@ -18,67 +19,71 @@ def chunks(l, n):
 def search_wrapper(search_param_dict):
     search_files(search_param_dict["spectra_files"], search_param_dict["temp_folder"], search_param_dict["tempresults_folder"], search_param_dict["args"], search_param_dict["params_object"], search_param_dict["library_files"])
 
-def search_files(spectra_files, temp_folder, tempresults_folder, args, params_object, library_files):
+def search_files(spectrum_file, library_file, temp_folder, tempresults_folder, path_to_convert, path_to_main_exec,
+    min_matched_peaks=6, top_k_results=1, ion_tolerance=0.5, pm_tolerance=20, analog_search=0, max_shift_mass=0.5):
+
+
     parameter_filename = os.path.join(temp_folder, str(uuid.uuid4()) + ".params")
     output_parameter_file = open(parameter_filename, "w")
 
     #Search Criteria
-    output_parameter_file.write("MIN_MATCHED_PEAKS_SEARCH=%s\n" % (params_object["MIN_MATCHED_PEAKS"][0]))
-    output_parameter_file.write("TOP_K_RESULTS=%s\n" % (params_object["TOP_K_RESULTS"][0]))
-    output_parameter_file.write("search_peak_tolerance=%s\n" % (params_object["tolerance.Ion_tolerance"][0]))
-    output_parameter_file.write("search_parentmass_tolerance=%s\n" % (params_object["tolerance.PM_tolerance"][0]))
-    output_parameter_file.write("ANALOG_SEARCH=%s\n" % (params_object["ANALOG_SEARCH"][0]))
-    output_parameter_file.write("MAX_SHIFT_MASS=%s\n" % (params_object["MAX_SHIFT_MASS"][0]))
+    output_parameter_file.write("MIN_MATCHED_PEAKS_SEARCH={}\n".format(min_matched_peaks))
+    output_parameter_file.write("TOP_K_RESULTS={}\n".format(top_k_results))
+    output_parameter_file.write("search_peak_tolerance={}\n".format(ion_tolerance))
+    output_parameter_file.write("search_parentmass_tolerance={}\n".format(pm_tolerance))
+    output_parameter_file.write("ANALOG_SEARCH={}\n".format(0))
+    output_parameter_file.write("MAX_SHIFT_MASS={}\n".format(1999))
 
     #Filtering Criteria
-    output_parameter_file.write("FILTER_PRECURSOR_WINDOW=%s\n" % (params_object["FILTER_PRECURSOR_WINDOW"][0]))
-    output_parameter_file.write("MIN_PEAK_INT=%s\n" % (params_object["MIN_PEAK_INT"][0]))
-    output_parameter_file.write("WINDOW_FILTER=%s\n" % (params_object["WINDOW_FILTER"][0]))
-    output_parameter_file.write("FILTER_LIBRARY=%s\n" % (params_object["FILTER_LIBRARY"][0]))
+    output_parameter_file.write("FILTER_PRECURSOR_WINDOW={}\n".format(1))
+    output_parameter_file.write("MIN_PEAK_INT={}\n".format(0))
+    output_parameter_file.write("WINDOW_FILTER={}\n".format(1))
+    output_parameter_file.write("FILTER_LIBRARY={}\n".format(1))
 
     #Scoring Criteria
-    output_parameter_file.write("SCORE_THRESHOLD=%s\n" % (params_object["SCORE_THRESHOLD"][0]))
+    output_parameter_file.write("SCORE_THRESHOLD={}\n".format(0.7))
 
     #Output
-    output_parameter_file.write("RESULTS_DIR=%s\n" % (os.path.join(tempresults_folder, str(uuid.uuid4()) + ".tsv")))
+    output_parameter_file.write("RESULTS_DIR={}\n".format(tempresults_folder))
 
-    output_parameter_file.write("NODEIDX=%d\n" % (0))
-    output_parameter_file.write("NODECOUNT=%d\n" % (1))
+    output_parameter_file.write("NODEIDX={}\n".format(0))
+    output_parameter_file.write("NODECOUNT={}\n".format(1))
 
-    output_parameter_file.write("EXISTING_LIBRARY_MGF=%s\n" % (" ".join(library_files)))
+    output_parameter_file.write("EXISTING_LIBRARY_MGF={}\n".format(library_file))
 
+    # Formatting and converting query files
     all_query_spectra_list = []
-    for spectrum_file in spectra_files:
-        fileName, fileExtension = os.path.splitext(os.path.basename(spectrum_file))
-        output_filename = ""
+    
+    fileName, fileExtension = os.path.splitext(os.path.basename(spectrum_file))
+    output_filename = ""
 
-        if spectrum_file.find("mzXML") != -1 or spectrum_file.find("mzxml") != -1 or spectrum_file.find("mzML") != -1:
-            output_filename = os.path.join(temp_folder, fileName + ".pklbin")
-            cmd = "%s %s %s" % (args.convert_binary, spectrum_file, output_filename)
-            print(cmd)
-            os.system(cmd)
-        else:
-            output_filename = os.path.join(temp_folder, os.path.basename(spectrum_file))
-            cmd = "cp %s %s" % (spectrum_file, output_filename)
-            os.system(cmd)
+    if spectrum_file.find("mzXML") != -1 or spectrum_file.find("mzxml") != -1 or spectrum_file.find("mzML") != -1:
+        output_filename = os.path.join(temp_folder, fileName + ".pklbin")
+        cmd = "%s %s %s" % (path_to_convert, spectrum_file, output_filename)
+        print(cmd)
+        os.system(cmd)
+    else:
+        output_filename = os.path.join(temp_folder, os.path.basename(spectrum_file))
+        cmd = "cp %s %s" % (spectrum_file, output_filename)
+        os.system(cmd)
 
-        #Input
-        faked_output_filename = os.path.join(temp_folder, os.path.basename(spectrum_file))
-        all_query_spectra_list.append(faked_output_filename)
-
+    #Input
+    faked_output_filename = os.path.join(temp_folder, os.path.basename(spectrum_file))
+    all_query_spectra_list.append(faked_output_filename)
 
     output_parameter_file.write("searchspectra=%s\n" % (" ".join(all_query_spectra_list)))
     output_parameter_file.close()
 
-    cmd = "%s ExecSpectralLibrarySearchMolecular %s -ccms_input_spectradir %s -ccms_results_prefix %s -ll 9" % (args.librarysearch_binary, parameter_filename, temp_folder, tempresults_folder)
+    cmd = "{} ExecSpectralLibrarySearchMolecular {} -ccms_input_spectradir {} -ccms_results_prefix {} -ll 9".format(path_to_main_exec, \
+        parameter_filename, temp_folder, tempresults_folder)
     print(cmd)
     os.system(cmd)
 
-        #Removing the spectrum
-        # try:
-        #     os.remove(output_filename)
-        # except:
-        #     print("Can't remove", output_filename)
+    #Removing the spectrum
+    try:
+        os.remove(output_filename)
+    except:
+        print("Can't remove", output_filename)
 
 
 def main():
@@ -88,7 +93,7 @@ def main():
     parser.add_argument('result_folder', help='output folder for results')
     parser.add_argument('convert_binary', help='conversion binary')
     parser.add_argument('librarysearch_binary', help='librarysearch_binary')
-    
+
     args = parser.parse_args()
 
     temp_folder = "temp"
@@ -106,27 +111,15 @@ def main():
     print(args)
 
     # performing the search
+    search_files(args.spectrum_file, args.library_file, \
+        temp_folder, tempresults_folder, \
+        args.convert_binary, args.librarysearch_binary)
 
-    #for param_dict in parameter_list:
-    #    search_wrapper(param_dict)
-    # print("Parallel to execute", len(parameter_list))
-    # ming_parallel_library.run_parallel_job(search_wrapper, parameter_list, 5)
-
-
-    # """Merging Files and adding full path"""
-    # all_result_files = ming_fileio_library.list_files_in_dir(tempresults_folder)
-    # full_result_list = []
-    # for input_file in all_result_files:
-    #     result_list = ming_fileio_library.parse_table_with_headers_object_list(input_file)
-    #     full_result_list += result_list
-
-    # for result_object in full_result_list:
-    #     mangled_name = os.path.basename(result_object["SpectrumFile"])
-    #     full_path = mangled_mapping[mangled_name]
-    #     result_object["full_CCMS_path"] = full_path
-
-    # ming_fileio_library.write_list_dict_table_data(full_result_list, os.path.join(args.result_folder, str(uuid.uuid4()) + ".tsv"))
-
+    # Reformatting the output
+    output_results_file = os.path.join(args.result_folder, os.path.basename(args.spectrum_file) + "_" + os.path.basename(args.library_file) + ".tsv")
+    
+    results_df = pd.read_csv(os.path.join(tempresults_folder, "tempresults"), sep="\t")
+    results_df.to_csv(output_results_file, sep="\t", index=False)
 
 
 
