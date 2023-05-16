@@ -98,10 +98,11 @@ def main():
     parser.add_argument('result_folder', help='output folder for results')
     parser.add_argument('convert_binary', help='conversion binary')
     parser.add_argument('librarysearch_binary', help='librarysearch_binary')
-    parser.add_argument('--pm_tolernace', defaul=0.5, help='pm_tolernace')
-    parser.add_argument('--fragment_tolerance', defaul=0.5, help='fragment_tolerance')
-    parser.add_argument('--library_min_cosine', defaul=0.7, help='library_min_cosine')
-    parser.add_argument('--library_min_matched_peaks', defaul=6, help='library_min_matched_peaks')
+    parser.add_argument('--pm_tolerance', default=0.5, help='pm_tolerance')
+    parser.add_argument('--fragment_tolerance', default=0.5, help='fragment_tolerance')
+    parser.add_argument('--library_min_cosine', default=0.7, help='library_min_cosine')
+    parser.add_argument('--library_min_matched_peaks', default=6, help='library_min_matched_peaks')
+    parser.add_argument('--topk', default=1, help='topk')
 
 
     args = parser.parse_args()
@@ -126,7 +127,7 @@ def main():
         args.convert_binary, args.librarysearch_binary,
         min_cosine=args.library_min_cosine,
         min_matched_peaks=args.library_min_matched_peaks, 
-        top_k_results=1, 
+        top_k_results=args.topk, 
         ion_tolerance=args.fragment_tolerance, 
         pm_tolerance=args.pm_tolernace)
 

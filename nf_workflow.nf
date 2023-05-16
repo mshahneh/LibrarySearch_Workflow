@@ -5,6 +5,7 @@ params.inputlibraries = "data/libraries"
 params.inputspectra = "data/spectra"
 
 // Parameters
+// TODO: Filter TopK properly at the merge step
 params.topk = 1
 
 params.fragment_tolerance = 0.5
@@ -13,8 +14,13 @@ params.pm_tolerance = 2.0
 params.library_min_cosine = 0.7
 params.library_min_matched_peaks = 6
 
+//TODO: Implement This
 params.filter_precursor = 1
 params.filter_window = 1
+
+//TODO: Implement This
+params.analog_search = 0
+params.analog_max_shift = 1999
 
 TOOL_FOLDER = "$baseDir/bin"
 
@@ -35,7 +41,12 @@ process searchData {
     python $TOOL_FOLDER/library_search_wrapper.py \
     $input_spectrum $input_library search_results \
     $TOOL_FOLDER/convert \
-    $TOOL_FOLDER/main_execmodule.allcandidates
+    $TOOL_FOLDER/main_execmodule.allcandidates \
+    --pm_tolerance $params.pm_tolerance \
+    --fragment_tolerance $params.fragment_tolerance \
+    --topk $params.topk \
+    --library_min_cosine $params.library_min_cosine \
+    --library_min_matched_peaks $params.library_min_matched_peaks
     """
 }
 
