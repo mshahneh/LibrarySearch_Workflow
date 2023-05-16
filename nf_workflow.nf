@@ -63,7 +63,9 @@ process mergeResults {
 
     """
     python $TOOL_FOLDER/tsv_merger.py \
-    results merged_results.tsv
+    results \
+    merged_results.tsv \
+    --topk $params.topk
     """
 }
 

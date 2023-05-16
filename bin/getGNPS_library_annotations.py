@@ -10,6 +10,10 @@ import argparse
 import urllib.parse
 from tqdm import tqdm
 
+# Adding a requests cache
+import requests_cache
+requests_cache.install_cache('gnps_library_cache', backend='sqlite')
+
 def enrich_output(input_filename, output_filename, topk=None):
     spectrum_id_cache = {}
     molecule_explorer_df = pd.DataFrame(ming_gnps_library.get_molecule_explorer_dataset_data())
@@ -142,7 +146,7 @@ def enrich_output(input_filename, output_filename, topk=None):
         # Calculating inchi
         if len(output_result_dict["Smiles"]) > 5 and len(output_result_dict["INCHI"]) < 5:
             try:
-                inchi_url = "https://gnps-structure.ucsd.edu/inchi?smiles={}".format(urllib.parse.quote_plus(output_result_dict["Smiles"]), 
+                inchi_url = "https://structure.gnps2.org/inchi?smiles={}".format(urllib.parse.quote_plus(output_result_dict["Smiles"]), 
                                     urllib.parse.quote_plus(output_result_dict["INCHI"]))
                 r = requests.get(inchi_url)
                 r.raise_for_status()
@@ -153,7 +157,7 @@ def enrich_output(input_filename, output_filename, topk=None):
         # Calculating smiles
         if len(output_result_dict["Smiles"]) < 5 and len(output_result_dict["INCHI"]) > 5:
             try:
-                smiles_url = "https://gnps-structure.ucsd.edu/smiles?inchi={}".format(urllib.parse.quote_plus(output_result_dict["INCHI"]), 
+                smiles_url = "https://structure.gnps2.org/smiles?inchi={}".format(urllib.parse.quote_plus(output_result_dict["INCHI"]), 
                                     urllib.parse.quote_plus(output_result_dict["Smiles"]))
                 r = requests.get(smiles_url)
                 r.raise_for_status()
@@ -164,7 +168,7 @@ def enrich_output(input_filename, output_filename, topk=None):
         # Calculating molecular formula
         if len(output_result_dict["Smiles"]) > 5:
             try:
-                formula_url = "https://gnps-structure.ucsd.edu/formula?smiles={}".format(output_result_dict["Smiles"])
+                formula_url = "https://structure.gnps2.org/formula?smiles={}".format(output_result_dict["Smiles"])
                 r = requests.get(formula_url)
                 r.raise_for_status()
                 output_result_dict["molecular_formula"] = r.text
@@ -179,7 +183,7 @@ def enrich_output(input_filename, output_filename, topk=None):
             output_result_dict["InChIKey-Planar"] = "N/A"
         else:
             try:
-                inchikey_url = "https://gnps-structure.ucsd.edu/inchikey?smiles={}&inchi={}".format(urllib.parse.quote_plus(output_result_dict["Smiles"]), 
+                inchikey_url = "https://structure.gnps2.org/inchikey?smiles={}&inchi={}".format(urllib.parse.quote_plus(output_result_dict["Smiles"]), 
                                     urllib.parse.quote_plus(output_result_dict["INCHI"]))
                 r = requests.get(inchikey_url)
                 r.raise_for_status()
@@ -193,7 +197,7 @@ def enrich_output(input_filename, output_filename, topk=None):
         if len(output_result_dict["InChIKey"]) > 5:
             try:
                 classyfire_url = "https://gnps-classyfire.ucsd.edu/entities/{}.json".format(output_result_dict["InChIKey"])
-                r = requests.get(classyfire_url, timeout=10)
+                r = requests.get(classyfire_url, timeout=1)
                 r.raise_for_status()
                 classification_json = r.json()
 
