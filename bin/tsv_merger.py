@@ -36,7 +36,7 @@ def main():
     all_results_df = all_results_df.sort_values(by=["MQScore"], ascending=False)
 
     # Grouping by key and getting topk
-    all_results_df = all_results_df.groupby("key").head(args.topk)
+    all_results_df = all_results_df.groupby("key").head(int(args.topk))
 
     # Flatten
     all_results_df = all_results_df.drop(columns=["key"])
