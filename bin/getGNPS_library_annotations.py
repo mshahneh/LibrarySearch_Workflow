@@ -194,24 +194,24 @@ def enrich_output(input_filename, output_filename, topk=None):
                 output_result_dict["InChIKey-Planar"] = "N/A"
 
         # Getting Classyfire
-        if len(output_result_dict["InChIKey"]) > 5:
-            try:
-                classyfire_url = "https://gnps-classyfire.ucsd.edu/entities/{}.json".format(output_result_dict["InChIKey"])
-                r = requests.get(classyfire_url, timeout=1)
-                r.raise_for_status()
-                classification_json = r.json()
+        # if len(output_result_dict["InChIKey"]) > 5:
+        #     try:
+        #         classyfire_url = "https://gnps-classyfire.ucsd.edu/entities/{}.json".format(output_result_dict["InChIKey"])
+        #         r = requests.get(classyfire_url, timeout=1)
+        #         r.raise_for_status()
+        #         classification_json = r.json()
 
-                output_result_dict["superclass"] = classification_json["superclass"]["name"]
-                output_result_dict["class"] = classification_json["class"]["name"]
-                output_result_dict["subclass"] = classification_json["subclass"]["name"]
-            except:
-                output_result_dict["superclass"] = "N/A"
-                output_result_dict["class"] = "N/A"
-                output_result_dict["subclass"] = "N/A"
-        else:
-            output_result_dict["superclass"] = "N/A"
-            output_result_dict["class"] = "N/A"
-            output_result_dict["subclass"] = "N/A"
+        #         output_result_dict["superclass"] = classification_json["superclass"]["name"]
+        #         output_result_dict["class"] = classification_json["class"]["name"]
+        #         output_result_dict["subclass"] = classification_json["subclass"]["name"]
+        #     except:
+        #         output_result_dict["superclass"] = "N/A"
+        #         output_result_dict["class"] = "N/A"
+        #         output_result_dict["subclass"] = "N/A"
+        # else:
+        #     output_result_dict["superclass"] = "N/A"
+        #     output_result_dict["class"] = "N/A"
+        #     output_result_dict["subclass"] = "N/A"
 
         # Getting NP Classifier
         if len(output_result_dict["Smiles"]) > 5:
