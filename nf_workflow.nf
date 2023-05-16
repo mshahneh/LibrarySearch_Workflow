@@ -7,11 +7,11 @@ params.inputspectra = "data/spectra"
 // Parameters
 params.topk = 1
 
-params.ion_tolerance = 0.5
+params.fragment_tolerance = 0.5
 params.pm_tolerance = 2.0
 
-params.cosine_threshold = 0.7
-params.min_match = 6
+params.library_min_cosine = 0.7
+params.library_min_matched_peaks = 6
 
 params.filter_precursor = 1
 params.filter_window = 1
@@ -76,7 +76,7 @@ process getGNPSAnnotations {
 
 workflow {
     libraries = Channel.fromPath(params.inputlibraries + "/*.mgf" )
-    spectra = Channel.fromPath(params.inputspectra + "/*" )
+    spectra = Channel.fromPath(params.inputspectra + "/**" )
     
     search_results = searchData(libraries, spectra)
 

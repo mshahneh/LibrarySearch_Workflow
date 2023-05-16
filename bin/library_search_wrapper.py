@@ -20,7 +20,12 @@ def search_wrapper(search_param_dict):
     search_files(search_param_dict["spectra_files"], search_param_dict["temp_folder"], search_param_dict["tempresults_folder"], search_param_dict["args"], search_param_dict["params_object"], search_param_dict["library_files"])
 
 def search_files(spectrum_file, library_file, temp_folder, tempresults_folder, path_to_convert, path_to_main_exec,
-    min_matched_peaks=6, top_k_results=1, ion_tolerance=0.5, pm_tolerance=20, analog_search=0, max_shift_mass=0.5):
+    min_cosine=0.7,
+    min_matched_peaks=6, 
+    top_k_results=1, 
+    ion_tolerance=0.5, 
+    pm_tolerance=2.0, 
+    analog_search=0, max_shift_mass=0.5):
 
 
     parameter_filename = os.path.join(temp_folder, str(uuid.uuid4()) + ".params")
@@ -41,7 +46,7 @@ def search_files(spectrum_file, library_file, temp_folder, tempresults_folder, p
     output_parameter_file.write("FILTER_LIBRARY={}\n".format(1))
 
     #Scoring Criteria
-    output_parameter_file.write("SCORE_THRESHOLD={}\n".format(0.7))
+    output_parameter_file.write("SCORE_THRESHOLD={}\n".format(min_cosine))
 
     #Output
     output_parameter_file.write("RESULTS_DIR={}\n".format(tempresults_folder))
@@ -93,6 +98,11 @@ def main():
     parser.add_argument('result_folder', help='output folder for results')
     parser.add_argument('convert_binary', help='conversion binary')
     parser.add_argument('librarysearch_binary', help='librarysearch_binary')
+    parser.add_argument('--pm_tolernace', defaul=0.5, help='pm_tolernace')
+    parser.add_argument('--fragment_tolerance', defaul=0.5, help='fragment_tolerance')
+    parser.add_argument('--library_min_cosine', defaul=0.7, help='library_min_cosine')
+    parser.add_argument('--library_min_matched_peaks', defaul=6, help='library_min_matched_peaks')
+
 
     args = parser.parse_args()
 
@@ -111,9 +121,14 @@ def main():
     print(args)
 
     # performing the search
-    search_files(args.spectrum_file, args.library_file, \
-        temp_folder, tempresults_folder, \
-        args.convert_binary, args.librarysearch_binary)
+    search_files(args.spectrum_file, args.library_file,
+        temp_folder, tempresults_folder,
+        args.convert_binary, args.librarysearch_binary,
+        min_cosine=args.library_min_cosine,
+        min_matched_peaks=args.library_min_matched_peaks, 
+        top_k_results=1, 
+        ion_tolerance=args.fragment_tolerance, 
+        pm_tolerance=args.pm_tolernace)
 
     # Reformatting the output
     output_results_file = os.path.join(args.result_folder, os.path.basename(args.spectrum_file) + "_" + os.path.basename(args.library_file) + ".tsv")

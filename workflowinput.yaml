@@ -33,4 +33,29 @@ parameterlist:
     - displayname: Search Parameters
       paramtype: section
 
+    - displayname: Precursor Ion Tolerance
+      paramtype: text
+      nf_paramname: pm_tolerance
+      formplaceholder: Enter the pm_tolerance
+      formvalue: "2.0"
+      tooltip: "pm_tolerance"
 
+    - displayname: Fragment Ion Tolerance
+      paramtype: text
+      nf_paramname: fragment_tolerance
+      formplaceholder: Enter the fragment_tolerance
+      formvalue: "0.5"
+      tooltip: "fragment_tolerance"
+
+
+    - displayname: Library Minimum Cosine
+      paramtype: text
+      nf_paramname: library_min_cosine
+      formplaceholder: Enter the library_min_cosine
+      formvalue: "0.7"
+
+    - displayname: Library Minimum Matched Peaks
+      paramtype: text
+      nf_paramname: library_min_matched_peaks
+      formplaceholder: Enter the library_min_matched_peaks
+      formvalue: "6"
