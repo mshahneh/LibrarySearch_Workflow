@@ -5,7 +5,6 @@ params.inputlibraries = "data/libraries"
 params.inputspectra = "data/spectra"
 
 // Parameters
-// TODO: Filter TopK properly at the merge step
 params.topk = 1
 
 params.fragment_tolerance = 0.5
