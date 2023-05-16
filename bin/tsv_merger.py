@@ -12,9 +12,10 @@ import glob
 
 def main():
     # Parsing the arguments
-    parser = argparse.ArgumentParser(description='Merging Results Files')
+    parser = argparse.ArgumentParser(description='Merging Library Results Files')
     parser.add_argument('input_folder', help='input_folder')
     parser.add_argument('output_file', help='output_file')
+    parser.add_argument('--topk', default=1, help='topk')
 
     args = parser.parse_args()
 
@@ -29,6 +30,16 @@ def main():
     
     # merging results
     all_results_df = pd.concat(all_results_list, ignore_index=True)
+
+    # Get Topk results by score per file and scan
+    all_results_df["key"] = all_results_df["SpectrumFile"].astype(str) + ":" + all_results_df["#Scan#"].astype(str) 
+    all_results_df = all_results_df.sort_values(by=["MQScore"], ascending=False)
+
+    # Grouping by key and getting topk
+    all_results_df = all_results_df.groupby("key").head(args.topk)
+
+    # Flatten
+    all_results_df = all_results_df.drop(columns=["key"])
 
     # writing results
     all_results_df.to_csv(args.output_file, sep="\t", index=False)

@@ -23,8 +23,8 @@ def search_files(spectrum_file, library_file, temp_folder, tempresults_folder, p
     min_cosine=0.7,
     min_matched_peaks=6, 
     top_k_results=1, 
-    ion_tolerance=0.5, 
     pm_tolerance=2.0, 
+    ion_tolerance=0.5, 
     analog_search=0, max_shift_mass=0.5):
 
 
@@ -128,8 +128,8 @@ def main():
         min_cosine=args.library_min_cosine,
         min_matched_peaks=args.library_min_matched_peaks, 
         top_k_results=args.topk, 
-        ion_tolerance=args.fragment_tolerance, 
-        pm_tolerance=args.pm_tolernace)
+        pm_tolerance=args.pm_tolerance,
+        ion_tolerance=args.fragment_tolerance)
 
     # Reformatting the output
     output_results_file = os.path.join(args.result_folder, os.path.basename(args.spectrum_file) + "_" + os.path.basename(args.library_file) + ".tsv")

@@ -80,7 +80,8 @@ process getGNPSAnnotations {
 
     """
     python $TOOL_FOLDER/getGNPS_library_annotations.py \
-    merged_results.tsv merged_results_with_gnps.tsv
+    merged_results.tsv \
+    merged_results_with_gnps.tsv
     """
 
 }
