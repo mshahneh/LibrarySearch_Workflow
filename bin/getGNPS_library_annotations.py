@@ -216,7 +216,7 @@ def enrich_output(input_filename, output_filename, topk=None):
         # Getting NP Classifier
         if len(output_result_dict["Smiles"]) > 5:
             try:
-                npclassifier_url = "https://npclassifier.ucsd.edu/classify?smiles={}".format(output_result_dict["Smiles"])
+                npclassifier_url = "https://npclassifier.gnps2.org/classify?smiles={}".format(output_result_dict["Smiles"])
                 r = requests.get(npclassifier_url, timeout=10)
                 r.raise_for_status()
                 classification_json = r.json()
