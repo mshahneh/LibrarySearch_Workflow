@@ -7,4 +7,5 @@ dependencies:
   - pip:
     - xmltodict
     - requests
+    - requests_cache
     - tqdm
