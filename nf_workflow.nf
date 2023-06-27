@@ -23,6 +23,9 @@ params.filter_window = 1
 params.analog_search = 0
 params.analog_max_shift = 1999
 
+// Blink Parameters
+params.blink_ionization = "positive"
+
 TOOL_FOLDER = "$baseDir/bin"
 
 process searchDataGNPS {
@@ -54,7 +57,7 @@ process searchDataGNPS {
 process searchDataBlink {
     //publishDir "./nf_output", mode: 'copy'
 
-    conda "$TOOL_FOLDER/conda_env.yml"
+    conda "$TOOL_FOLDER/blink/environment.yml"
 
     input:
     each file(input_library)
@@ -63,17 +66,18 @@ process searchDataBlink {
     output:
     file 'search_results/*' optional true
 
+    script:
+    def randomFilename = UUID.randomUUID().toString()
     """
     mkdir search_results
-    python $TOOL_FOLDER/library_search_wrapper.py \
-    $input_spectrum $input_library search_results \
-    $TOOL_FOLDER/convert \
-    $TOOL_FOLDER/main_execmodule.allcandidates \
-    --pm_tolerance $params.pm_tolerance \
-    --fragment_tolerance $params.fragment_tolerance \
-    --topk $params.topk \
-    --library_min_cosine $params.library_min_cosine \
-    --library_min_matched_peaks $params.library_min_matched_peaks
+    python -m $TOOL_FOLDER/blink/blink.blink_cli \
+    $input_spectrum \
+    $input_library \
+    search_results/${randomFilename}.csv \
+    $TOOL_FOLDER/blink/models/positive_random_forest.pickle \
+    $TOOL_FOLDER/blink/models/negative_random_forest.pickle \
+    positive \
+
     """
 }
 
