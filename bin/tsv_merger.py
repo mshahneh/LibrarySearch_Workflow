@@ -9,6 +9,15 @@ from collections import defaultdict
 import argparse
 import glob
 
+def _parse_file(input_filename):
+    # checking extension
+    if not input_filename.endswith(".tsv"):
+        df = pd.read_csv(input_filename, sep="\t")
+    elif input_filename.endswith(".csv"):
+        df = pd.read_csv(input_filename, sep=",")
+
+    return df
+
 
 def main():
     # Parsing the arguments
@@ -23,7 +32,7 @@ def main():
 
     all_results_list = []
     for i, results_file in enumerate(all_results_files):
-        temp_df = pd.read_csv(results_file, sep="\t")
+        temp_df = _parse_file(results_file)
 
         if len(temp_df) > 0:
             all_results_list.append(temp_df)

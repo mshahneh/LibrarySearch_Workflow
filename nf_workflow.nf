@@ -5,6 +5,8 @@ params.inputlibraries = "data/libraries"
 params.inputspectra = "data/spectra"
 
 // Parameters
+params.searchtool = "gnps" // blink
+
 params.topk = 1
 
 params.fragment_tolerance = 0.5
@@ -21,9 +23,13 @@ params.filter_window = 1
 params.analog_search = 0
 params.analog_max_shift = 1999
 
+// Blink Parameters
+params.blink_ionization = "positive"
+params.blink_minpredict = 0.01
+
 TOOL_FOLDER = "$baseDir/bin"
 
-process searchData {
+process searchDataGNPS {
     //publishDir "./nf_output", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
@@ -46,6 +52,40 @@ process searchData {
     --topk $params.topk \
     --library_min_cosine $params.library_min_cosine \
     --library_min_matched_peaks $params.library_min_matched_peaks
+    """
+}
+
+process searchDataBlink {
+    //publishDir "./nf_output", mode: 'copy'
+
+    conda "$TOOL_FOLDER/blink/environment.yml"
+
+    input:
+    each file(input_library)
+    each file(input_spectrum)
+
+    output:
+    file 'search_results/*' optional true
+
+    script:
+    def randomFilename = UUID.randomUUID().toString()
+    def input_spectrum_abs = input_spectrum.toRealPath()
+    def input_library_abs = input_library.toRealPath()
+    """
+    mkdir search_results
+    echo $workDir
+    previous_cwd=\$(pwd)
+    echo \$previous_cwd
+
+    cd $TOOL_FOLDER/blink && python -m blink.blink_cli \
+    $input_spectrum_abs \
+    $input_library_abs \
+    \$previous_cwd/search_results/${randomFilename}.csv \
+    $TOOL_FOLDER/blink/models/positive_random_forest.pickle \
+    $TOOL_FOLDER/blink/models/negative_random_forest.pickle \
+    positive \
+    --min_predict 0.01 \
+    --mass_diffs 0 14.0157 12.000 15.9949 2.01565 27.9949 26.0157 18.0106 30.0106 42.0106 1.9792 17.00284 24.000 13.97925 1.00794 40.0313
     """
 }
 
@@ -91,10 +131,17 @@ workflow {
     libraries = Channel.fromPath(params.inputlibraries + "/*.mgf" )
     spectra = Channel.fromPath(params.inputspectra + "/**" )
     
-    search_results = searchData(libraries, spectra)
+    if(params.searchtool == "gnps"){
+        search_results = searchData(libraries, spectra)
 
-    // TODO: We'll want to collate them into batches and then batch the batches
-    merged_results = mergeResults(search_results.collect())
+        // TODO: We'll want to collate them into batches and then batch the batches
+        merged_results = mergeResults(search_results.collect())
+    }
+    else if (params.searchtool == "blink"){
+        search_results = searchDataBlink(libraries, spectra)
+
+        merged_results = mergeResults(search_results.collect())
+    }
 
     getGNPSAnnotations(merged_results)
 }

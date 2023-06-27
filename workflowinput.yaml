@@ -24,7 +24,7 @@ parameterlist:
       paramtype: fileselector
       nf_paramname: inputlibraries
       formplaceholder: Enter the path to search libraries
-      formvalue: ""
+      formvalue: "LIBRARYLOCATION/LC"
       targettaskfolder: inputlibraries
       optional: false
       selectsinglefile: false
@@ -32,6 +32,16 @@ parameterlist:
 
     - displayname: Search Parameters
       paramtype: section
+
+    - displayname: Similarity Tool
+      paramtype: select
+      nf_paramname: searchtool
+      formvalue: gnps
+      options:
+        - value: gnps
+          display: gnps
+        - value: blink
+          display: blink
 
     - displayname: Precursor Ion Tolerance
       paramtype: text
@@ -47,7 +57,6 @@ parameterlist:
       formvalue: "0.5"
       tooltip: "fragment_tolerance"
 
-
     - displayname: Library Minimum Cosine
       paramtype: text
       nf_paramname: library_min_cosine
@@ -59,3 +68,25 @@ parameterlist:
       nf_paramname: library_min_matched_peaks
       formplaceholder: Enter the library_min_matched_peaks
       formvalue: "6"
+
+    - displayname: Blink Parameters
+      paramtype: section
+
+    - displayname: Similarity Tool
+      paramtype: select
+      nf_paramname: searchtool
+      formvalue: positive
+      options:
+        - value: positive
+          display: positive
+        - value: negative
+          display: negative
+
+    - displayname: blink_minpredict
+      paramtype: text
+      nf_paramname: blink_minpredict
+      formplaceholder: Enter the blink_minpredict
+      formvalue: "0.01"
+      tooltip: "Lorem Ipsum"
+
+    
