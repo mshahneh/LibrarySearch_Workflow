@@ -25,6 +25,7 @@ params.analog_max_shift = 1999
 
 // Blink Parameters
 params.blink_ionization = "positive"
+params.blink_minpredict = 0.01
 
 TOOL_FOLDER = "$baseDir/bin"
 
@@ -77,7 +78,8 @@ process searchDataBlink {
     $TOOL_FOLDER/blink/models/positive_random_forest.pickle \
     $TOOL_FOLDER/blink/models/negative_random_forest.pickle \
     positive \
-
+    --min_predict 0.01 \
+    --mass_diffs 0 14.0157 12.000 15.9949 2.01565 27.9949 26.0157 18.0106 30.0106 42.0106 1.9792 17.00284 24.000 13.97925 1.00794 40.0313
     """
 }
 
@@ -130,7 +132,8 @@ workflow {
         merged_results = mergeResults(search_results.collect())
     }
     else if (params.searchtool == "blink"){
+        search_results = searchDataBlink(libraries, spectra)
     }
 
-    getGNPSAnnotations(merged_results)
+    //getGNPSAnnotations(merged_results)
 }

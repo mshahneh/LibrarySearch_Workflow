@@ -81,3 +81,12 @@ parameterlist:
           display: positive
         - value: negative
           display: negative
+
+    - displayname: blink_minpredict
+      paramtype: text
+      nf_paramname: blink_minpredict
+      formplaceholder: Enter the blink_minpredict
+      formvalue: "0.01"
+      tooltip: "Lorem Ipsum"
+
+    
