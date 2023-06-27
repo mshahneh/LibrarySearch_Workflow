@@ -69,12 +69,18 @@ process searchDataBlink {
 
     script:
     def randomFilename = UUID.randomUUID().toString()
+    def input_spectrum_abs = input_spectrum.toRealPath()
+    def input_library_abs = input_library.toRealPath()
     """
     mkdir search_results
-    python -m $TOOL_FOLDER/blink/blink.blink_cli \
-    $input_spectrum \
-    $input_library \
-    search_results/${randomFilename}.csv \
+    echo $workDir
+    previous_cwd=\$(pwd)
+    echo \$previous_cwd
+
+    cd $TOOL_FOLDER/blink && python -m blink.blink_cli \
+    $input_spectrum_abs \
+    $input_library_abs \
+    \$previous_cwd/search_results/${randomFilename}.csv \
     $TOOL_FOLDER/blink/models/positive_random_forest.pickle \
     $TOOL_FOLDER/blink/models/negative_random_forest.pickle \
     positive \
@@ -133,7 +139,9 @@ workflow {
     }
     else if (params.searchtool == "blink"){
         search_results = searchDataBlink(libraries, spectra)
+
+        merged_results = mergeResults(search_results.collect())
     }
 
-    //getGNPSAnnotations(merged_results)
+    getGNPSAnnotations(merged_results)
 }
