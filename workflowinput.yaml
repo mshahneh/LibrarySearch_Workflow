@@ -24,7 +24,7 @@ parameterlist:
       paramtype: fileselector
       nf_paramname: inputlibraries
       formplaceholder: Enter the path to search libraries
-      formvalue: ""
+      formvalue: "LIBRARYLOCATION/LC"
       targettaskfolder: inputlibraries
       optional: false
       selectsinglefile: false
@@ -46,7 +46,6 @@ parameterlist:
       formplaceholder: Enter the fragment_tolerance
       formvalue: "0.5"
       tooltip: "fragment_tolerance"
-
 
     - displayname: Library Minimum Cosine
       paramtype: text

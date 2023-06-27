@@ -5,6 +5,8 @@ params.inputlibraries = "data/libraries"
 params.inputspectra = "data/spectra"
 
 // Parameters
+params.searchtool = "gnps" // blink
+
 params.topk = 1
 
 params.fragment_tolerance = 0.5
@@ -23,7 +25,33 @@ params.analog_max_shift = 1999
 
 TOOL_FOLDER = "$baseDir/bin"
 
-process searchData {
+process searchDataGNPS {
+    //publishDir "./nf_output", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    each file(input_library)
+    each file(input_spectrum)
+
+    output:
+    file 'search_results/*' optional true
+
+    """
+    mkdir search_results
+    python $TOOL_FOLDER/library_search_wrapper.py \
+    $input_spectrum $input_library search_results \
+    $TOOL_FOLDER/convert \
+    $TOOL_FOLDER/main_execmodule.allcandidates \
+    --pm_tolerance $params.pm_tolerance \
+    --fragment_tolerance $params.fragment_tolerance \
+    --topk $params.topk \
+    --library_min_cosine $params.library_min_cosine \
+    --library_min_matched_peaks $params.library_min_matched_peaks
+    """
+}
+
+process searchDataBlink {
     //publishDir "./nf_output", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
@@ -91,10 +119,14 @@ workflow {
     libraries = Channel.fromPath(params.inputlibraries + "/*.mgf" )
     spectra = Channel.fromPath(params.inputspectra + "/**" )
     
-    search_results = searchData(libraries, spectra)
+    if(params.searchtool == "gnps"){
+        search_results = searchData(libraries, spectra)
 
-    // TODO: We'll want to collate them into batches and then batch the batches
-    merged_results = mergeResults(search_results.collect())
+        // TODO: We'll want to collate them into batches and then batch the batches
+        merged_results = mergeResults(search_results.collect())
+    }
+    else if (params.searchtool == "blink"){
+    }
 
     getGNPSAnnotations(merged_results)
 }
