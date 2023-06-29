@@ -29,7 +29,12 @@ def main():
 
     df = _parse_file(args.input_blink_file)
 
-    print(df.columns)
+    df["SpectrumFile"] = df["query_filename"]
+    df["#Scan#"] = df["query_id"]
+    df["MQScore"] = df["rem_predicted_score"]
+
+    # Outputting
+    df.to_csv(args.output_file, sep="\t", index=False)
 
 if __name__ == "__main__":
     main()
