@@ -28,7 +28,7 @@ def main():
 
     args = parser.parse_args()
 
-    all_results_files = glob.glob(os.path.join(args.input_folder, "*.tsv"))
+    all_results_files = glob.glob(os.path.join(args.input_folder, "*"))
 
     all_results_list = []
     for i, results_file in enumerate(all_results_files):

@@ -65,7 +65,7 @@ process searchDataBlink {
     each file(input_spectrum)
 
     output:
-    file 'search_results/*' optional true
+    file 'search_results/*.csv' optional true
 
     script:
     def randomFilename = UUID.randomUUID().toString()
@@ -86,6 +86,22 @@ process searchDataBlink {
     positive \
     --min_predict 0.01 \
     --mass_diffs 0 14.0157 12.000 15.9949 2.01565 27.9949 26.0157 18.0106 30.0106 42.0106 1.9792 17.00284 24.000 13.97925 1.00794 40.0313
+    """
+}
+
+process formatBlinkResults {
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    path input_file
+
+    output:
+    path '*.tsv'
+
+    """
+    python $TOOL_FOLDER/format_blink.py \
+    $input_file \
+    ${input_file}.tsv
     """
 }
 
@@ -140,7 +156,9 @@ workflow {
     else if (params.searchtool == "blink"){
         search_results = searchDataBlink(libraries, spectra)
 
-        merged_results = mergeResults(search_results.collect())
+        formatted_results = formatBlinkResults(search_results)
+
+        merged_results = mergeResults(formatted_results.collect())
     }
 
     getGNPSAnnotations(merged_results)
