@@ -11,7 +11,7 @@ import glob
 
 def _parse_file(input_filename):
     # checking extension
-    if not input_filename.endswith(".tsv"):
+    if input_filename.endswith(".tsv"):
         df = pd.read_csv(input_filename, sep="\t")
     elif input_filename.endswith(".csv"):
         df = pd.read_csv(input_filename, sep=",")
@@ -32,6 +32,9 @@ def main():
     df["SpectrumFile"] = df["query_filename"]
     df["#Scan#"] = df["query_id"]
     df["MQScore"] = df["rem_predicted_score"]
+    df["FileScanUniqueID"] = df["SpectrumFile"].astype(str) + ":" + df["#Scan#"].astype(str)
+    df["LibrarySpectrumID"] = df["ref_id"]
+    df["LibraryName"] = df["ref_filename"]
 
     # Outputting
     df.to_csv(args.output_file, sep="\t", index=False)

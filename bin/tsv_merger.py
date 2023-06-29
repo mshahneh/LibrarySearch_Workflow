@@ -11,7 +11,7 @@ import glob
 
 def _parse_file(input_filename):
     # checking extension
-    if not input_filename.endswith(".tsv"):
+    if input_filename.endswith(".tsv"):
         df = pd.read_csv(input_filename, sep="\t")
     elif input_filename.endswith(".csv"):
         df = pd.read_csv(input_filename, sep=",")
