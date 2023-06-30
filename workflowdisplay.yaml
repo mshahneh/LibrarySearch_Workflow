@@ -10,17 +10,23 @@ Views:
         columns:
             -   title: "View Spectra"
                 data: 
+            -   title: "Scan"
+                data: "#Scan#"
+            -   title: "SpectrumFile"
+                data: SpectrumFile
             -   title: "Compound_Name"
                 data: Compound_Name
             -   title: "Ion_Source"
                 data: Ion_Source
             -   title: "Precursor_MZ"
                 data: Precursor_MZ
-            -   title: "Scan"
-                data: "#Scan#"
-            -   title: "SpectrumFile"
-                data: SpectrumFile
             -   title: "MQScore"
                 data: MQScore
             -   title: "SharedPeaks"
                 data: SharedPeaks
+            -   title: "SpectrumID"
+                data: SpectrumID
+        columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
+        return `
+            <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-inputspectra/${row["SpectrumFile"]}:scan:${row["#Scan#"]}&usi2=mzspec:GNPS:GNPS-LIBRARY:accession:${row["SpectrumID"]}">View Mirror</a>
+        `;}}]'

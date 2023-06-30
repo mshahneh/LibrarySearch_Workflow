@@ -135,6 +135,10 @@ def main():
     output_results_file = os.path.join(args.result_folder, os.path.basename(args.spectrum_file) + "_" + os.path.basename(args.library_file) + ".tsv")
     
     results_df = pd.read_csv(os.path.join(tempresults_folder, "tempresults"), sep="\t")
+
+    # Fixing Results, by basename
+    results_df["SpectrumFile"] = results_df["SpectrumFile"].apply(lambda x: os.path.basename(x))
+
     results_df.to_csv(output_results_file, sep="\t", index=False)
 
 

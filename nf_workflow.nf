@@ -148,7 +148,7 @@ workflow {
     spectra = Channel.fromPath(params.inputspectra + "/**" )
     
     if(params.searchtool == "gnps"){
-        search_results = searchData(libraries, spectra)
+        search_results = searchDataGNPS(libraries, spectra)
 
         // TODO: We'll want to collate them into batches and then batch the batches
         merged_results = mergeResults(search_results.collect())
