@@ -34,18 +34,18 @@ def main():
     df["MQScore"] = df["rem_predicted_score"]
     df["FileScanUniqueID"] = df["SpectrumFile"].astype(str) + ":" + df["#Scan#"].astype(str)
     df["LibrarySpectrumID"] = df["ref_id"]
+    df["LibraryName"] = df["ref_filename"]
+
+    df["Charge"] = df['query_charge']
+    df["SpecMZ"] = df['query_precursor_mz']
+    df["mzErrorPPM"] = df['mz_ppm_error']
+    df["ParentMassDiff"] = df['mz_diff']
+    df["p-value"] = df['query_rt']
 
     # Boiler plate
-    df["LibraryName"] = df["ref_filename"]
     df["UnstrictEvelopeScore"] = 0
-    df["p-value"] = 0
-    df["Charge"] = 0
-    df["SpecMZ"] = 0
-    df["mzErrorPPM"] = 0
     df["LibSearchSharedPeaks"] = 0
-    df["ParentMassDiff"] = 0
-
-
+    
     # Outputting
     df.to_csv(args.output_file, sep="\t", index=False)
 
