@@ -69,12 +69,18 @@ parameterlist:
       formplaceholder: Enter the library_min_matched_peaks
       formvalue: "6"
 
+    - displayname: Top-K
+      paramtype: text
+      nf_paramname: topk
+      formplaceholder: Enter the topk
+      formvalue: "1"
+
     - displayname: Blink Parameters
       paramtype: section
 
-    - displayname: Similarity Tool
+    - displayname: Ion Mode
       paramtype: select
-      nf_paramname: searchtool
+      nf_paramname: blink_ionization
       formvalue: positive
       options:
         - value: positive
@@ -82,11 +88,11 @@ parameterlist:
         - value: negative
           display: negative
 
-    - displayname: blink_minpredict
+    - displayname: Minimum BLINK Predicted Score
       paramtype: text
       nf_paramname: blink_minpredict
       formplaceholder: Enter the blink_minpredict
-      formvalue: "0.01"
-      tooltip: "Lorem Ipsum"
+      formvalue: "0.0075"
+      tooltip: "blink_minpredict"
 
     
