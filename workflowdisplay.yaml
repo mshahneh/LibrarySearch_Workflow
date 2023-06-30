@@ -8,6 +8,8 @@ Views:
     parameters:
         filename: nf_output/merged_results_with_gnps.tsv
         columns:
+            -   title: "View Spectra"
+                data: 
             -   title: "Compound_Name"
                 data: Compound_Name
             -   title: "Ion_Source"
