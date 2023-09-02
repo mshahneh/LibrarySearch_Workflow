@@ -10,20 +10,22 @@ Views:
         columns:
             -   title: "View Spectra"
                 data: 
-            -   title: "Scan"
+            -   title: "Query Scan"
                 data: "#Scan#"
-            -   title: "SpectrumFile"
+            -   title: "Query File"
                 data: SpectrumFile
-            -   title: "Compound_Name"
+            -   title: "Name"
                 data: Compound_Name
-            -   title: "Ion_Source"
+            -   title: "Ion"
                 data: Ion_Source
-            -   title: "Precursor_MZ"
+            -   title: "Precursor m/z"
                 data: Precursor_MZ
-            -   title: "MQScore"
+            -   title: "Cosine"
                 data: MQScore
-            -   title: "SharedPeaks"
+            -   title: "Shared Peaks"
                 data: SharedPeaks
+            -   title: "MassDiff"
+                data: MassDiff
             -   title: "SpectrumID"
                 data: SpectrumID
         columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
