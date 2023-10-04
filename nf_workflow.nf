@@ -20,7 +20,7 @@ params.filter_precursor = 1
 params.filter_window = 1
 
 //TODO: Implement This
-params.analog_search = 0
+params.analog_search = "0"
 params.analog_max_shift = 1999
 
 // Blink Parameters
@@ -51,7 +51,8 @@ process searchDataGNPS {
     --fragment_tolerance $params.fragment_tolerance \
     --topk $params.topk \
     --library_min_cosine $params.library_min_cosine \
-    --library_min_matched_peaks $params.library_min_matched_peaks
+    --library_min_matched_peaks $params.library_min_matched_peaks \
+    --analog_search $params.analog_search
     """
 }
 
