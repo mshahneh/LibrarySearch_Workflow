@@ -18,7 +18,7 @@ parameterlist:
       targettaskfolder: inputspectra
       optional: false
       selectsinglefile: false
-      folderunroll: true
+      folderunroll: false
 
     - displayname: Input Library Folder
       paramtype: fileselector
