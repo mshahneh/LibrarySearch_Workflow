@@ -69,6 +69,17 @@ parameterlist:
       formplaceholder: Enter the library_min_matched_peaks
       formvalue: "6"
 
+    # Analog Search
+    - displayname: Analog Search
+      paramtype: select
+      nf_paramname: analog_search
+      formvalue: "0"
+      options:
+        - value: "0"
+          display: "No"
+        - value: "1"
+          display: "Yes"
+
     
 
     - displayname: Top-K
