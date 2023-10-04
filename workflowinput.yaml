@@ -24,7 +24,7 @@ parameterlist:
       paramtype: fileselector
       nf_paramname: inputlibraries
       formplaceholder: Enter the path to search libraries
-      formvalue: "LIBRARYLOCATION/LC"
+      formvalue: "LIBRARYLOCATION/LC/LIBRARY"
       targettaskfolder: inputlibraries
       optional: false
       selectsinglefile: false
