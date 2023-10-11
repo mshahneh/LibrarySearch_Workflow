@@ -1,7 +1,7 @@
 workflowname: librarysearch_workflow
 workflowdescription: librarysearch_workflow
 workflowlongdescription: This is a library search workflow for GNPS2
-workflowversion: "0.1"
+workflowversion: "0.2"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -24,7 +24,7 @@ parameterlist:
       paramtype: fileselector
       nf_paramname: inputlibraries
       formplaceholder: Enter the path to search libraries
-      formvalue: "LIBRARYLOCATION/LC"
+      formvalue: "LIBRARYLOCATION/LC/LIBRARY"
       targettaskfolder: inputlibraries
       optional: false
       selectsinglefile: false
@@ -68,6 +68,17 @@ parameterlist:
       nf_paramname: library_min_matched_peaks
       formplaceholder: Enter the library_min_matched_peaks
       formvalue: "6"
+
+    # Analog Search
+    - displayname: Analog Search
+      paramtype: select
+      nf_paramname: analog_search
+      formvalue: "0"
+      options:
+        - value: "0"
+          display: "No"
+        - value: "1"
+          display: "Yes"
 
     
 
