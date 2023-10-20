@@ -10,14 +10,15 @@ import argparse
 import urllib.parse
 from tqdm import tqdm
 
-# Adding a requests cache
-import requests_cache
-requests_cache.install_cache('gnps_library_cache', backend='sqlite')
-
 def enrich_output(input_filename, output_filename, topk=None):
     spectrum_id_cache = {}
-    molecule_explorer_df = pd.DataFrame(ming_gnps_library.get_molecule_explorer_dataset_data())
+    # molecule_explorer_df = pd.DataFrame(ming_gnps_library.get_molecule_explorer_dataset_data())
 
+    if not os.path.exists(input_filename):
+        open(output_filename, "w").close()
+        print("Input file does not exist")
+        exit(0)
+    
     input_results_df = pd.read_csv(input_filename, sep="\t")
 
     # Here we will try to filter to topk
@@ -66,6 +67,8 @@ def enrich_output(input_filename, output_filename, topk=None):
             raise
         except:
             continue
+
+        # TODO: if there is an error in getting the IDs, we should just try to pass as much through as possible
 
         output_result_dict = {}
 
@@ -134,14 +137,14 @@ def enrich_output(input_filename, output_filename, topk=None):
         output_result_dict["tags"] = (tag_string)
 
         #Getting molecule explorer information
-        compound_name = gnps_library_spectrum["annotations"][0]["Compound_Name"].replace("\t", "")
-        compound_filtered_df = molecule_explorer_df[molecule_explorer_df["compound_name"] == compound_name]
-        if len(compound_filtered_df) == 1:
-            output_result_dict["MoleculeExplorerDatasets"] = (compound_filtered_df.to_dict(orient="records")[0]["number_datasets"])
-            output_result_dict["MoleculeExplorerFiles"] = (compound_filtered_df.to_dict(orient="records")[0]["number_files"])
-        else:
-            output_result_dict["MoleculeExplorerDatasets"] = (0)
-            output_result_dict["MoleculeExplorerFiles"] = (0)
+        # compound_name = gnps_library_spectrum["annotations"][0]["Compound_Name"].replace("\t", "")
+        # compound_filtered_df = molecule_explorer_df[molecule_explorer_df["compound_name"] == compound_name]
+        # if len(compound_filtered_df) == 1:
+        #     output_result_dict["MoleculeExplorerDatasets"] = (compound_filtered_df.to_dict(orient="records")[0]["number_datasets"])
+        #     output_result_dict["MoleculeExplorerFiles"] = (compound_filtered_df.to_dict(orient="records")[0]["number_files"])
+        # else:
+        #     output_result_dict["MoleculeExplorerDatasets"] = (0)
+        #     output_result_dict["MoleculeExplorerFiles"] = (0)
         
         # Calculating inchi
         if len(output_result_dict["Smiles"]) > 5 and len(output_result_dict["INCHI"]) < 5:
@@ -194,24 +197,24 @@ def enrich_output(input_filename, output_filename, topk=None):
                 output_result_dict["InChIKey-Planar"] = "N/A"
 
         # Getting Classyfire
-        # if len(output_result_dict["InChIKey"]) > 5:
-        #     try:
-        #         classyfire_url = "https://gnps-classyfire.ucsd.edu/entities/{}.json".format(output_result_dict["InChIKey"])
-        #         r = requests.get(classyfire_url, timeout=1)
-        #         r.raise_for_status()
-        #         classification_json = r.json()
+        if len(output_result_dict["InChIKey"]) > 5:
+            try:
+                classyfire_url = "https://classyfire.gnps2.org/entities/{}.json".format(output_result_dict["InChIKey"])
+                r = requests.get(classyfire_url, timeout=10)
+                r.raise_for_status()
+                classification_json = r.json()
 
-        #         output_result_dict["superclass"] = classification_json["superclass"]["name"]
-        #         output_result_dict["class"] = classification_json["class"]["name"]
-        #         output_result_dict["subclass"] = classification_json["subclass"]["name"]
-        #     except:
-        #         output_result_dict["superclass"] = "N/A"
-        #         output_result_dict["class"] = "N/A"
-        #         output_result_dict["subclass"] = "N/A"
-        # else:
-        #     output_result_dict["superclass"] = "N/A"
-        #     output_result_dict["class"] = "N/A"
-        #     output_result_dict["subclass"] = "N/A"
+                output_result_dict["superclass"] = classification_json["superclass"]["name"]
+                output_result_dict["class"] = classification_json["class"]["name"]
+                output_result_dict["subclass"] = classification_json["subclass"]["name"]
+            except:
+                output_result_dict["superclass"] = "N/A"
+                output_result_dict["class"] = "N/A"
+                output_result_dict["subclass"] = "N/A"
+        else:
+            output_result_dict["superclass"] = "N/A"
+            output_result_dict["class"] = "N/A"
+            output_result_dict["subclass"] = "N/A"
 
         # Getting NP Classifier
         if len(output_result_dict["Smiles"]) > 5:
