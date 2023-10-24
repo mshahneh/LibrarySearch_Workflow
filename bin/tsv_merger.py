@@ -37,8 +37,12 @@ def main():
         if len(temp_df) > 0:
             all_results_list.append(temp_df)
     
-    # merging results
-    all_results_df = pd.concat(all_results_list, ignore_index=True)
+    if len(all_results_list) == 1:
+        # If there is nothing to concat, skip concatentation
+        all_results_df = all_results_list[0]
+    else:
+        # merging results
+        all_results_df = pd.concat(all_results_list, ignore_index=True)
 
     # Get Topk results by score per file and scan
     all_results_df["key"] = all_results_df["SpectrumFile"].astype(str) + ":" + all_results_df["#Scan#"].astype(str) 

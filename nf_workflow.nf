@@ -5,7 +5,7 @@ params.inputlibraries = "data/libraries"
 params.inputspectra = "data/spectra"
 
 // Parameters
-params.searchtool = "gnps" // blink
+params.searchtool = "gnps" // blink, gnps
 
 params.topk = 1
 
@@ -14,6 +14,8 @@ params.pm_tolerance = 2.0
 
 params.library_min_cosine = 0.7
 params.library_min_matched_peaks = 6
+
+params.merge_batch_size = 1000 //Not a UI parameter
 
 //TODO: Implement This
 params.filter_precursor = 1
@@ -107,13 +109,29 @@ process formatBlinkResults {
     """
 }
 
-process mergeResults {
+process chunkResults {
     publishDir "./nf_output", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
-    path "results/*"
+    path to_merge, stageAs: './results/*'  // A directory of files, "results/*"
+
+    output:
+    path "batched_results.tsv"
+
+    """
+    python $TOOL_FOLDER/tsv_merger.py \
+    results \
+    batched_results.tsv \
+    --topk $params.topk
+    """
+}
+
+// Use a separate process to merge all the batched results
+process mergeResults {
+    input:
+    path to_merge, stageAs: './results/to_merge_*.tsv' // To avoid naming collisions
 
     output:
     path 'merged_results.tsv'
@@ -151,9 +169,10 @@ workflow {
     
     if(params.searchtool == "gnps"){
         search_results = searchDataGNPS(libraries, spectra)
-
-        // TODO: We'll want to collate them into batches and then batch the batches
-        merged_results = mergeResults(search_results.collect())
+        chunked_results = chunkResults(search_results.buffer(size: params.merge_batch_size, remainder: true))
+       
+        // Collect all the batched results and merge them at the end
+        merged_results = mergeResults(chunked_results.flatten())
     }
     else if (params.searchtool == "blink"){
         search_results = searchDataBlink(libraries, spectra)
