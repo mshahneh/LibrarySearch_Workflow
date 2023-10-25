@@ -37,17 +37,21 @@ process searchDataGNPS {
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
-    tuple file(input_library), file(input_spectrum), val(input_path)
+    tuple file(input_library), file(input_spectrum), val(input_path), val(full_path)
     // each path(input_library)
     // each tuple(path(input_spectrum), val(input_path))
 
     output:
     file 'search_results/*' optional true
-    //         --output_prefix $input_path \
+    file 'filename_mapping.csv' optional true
+
     """
     echo $input_spectrum
     mkdir search_results
     mv -n $input_spectrum $input_path
+    touch "./filename_mapping.csv"
+    echo "$full_path,$input_path" >> "./filename_mapping.csv"
+
     python $TOOL_FOLDER/library_search_wrapper.py \
         ${input_path}  $input_library search_results \
         $TOOL_FOLDER/convert \
@@ -145,6 +149,20 @@ process mergeResults {
     """
 }
 
+process mergeFileMapping {
+    publishDir "./nf_output", mode: 'copy'
+
+    input:
+    path to_merge, stageAs: './results/to_merge_*.csv' // To avoid naming collisions
+
+    output:
+    path 'filename_mapping.csv'
+
+    """
+    cat $to_merge > filename_mapping.csv
+    """
+}
+
 process getGNPSAnnotations {
     publishDir "./nf_output", mode: 'copy'
 
@@ -173,14 +191,15 @@ workflow {
         inputs = libraries.combine(spectra)
         // For each path, add the path as a string for file naming. Result is [library_file, spectrum_file, spectrum_path_as_str]
         // Must add the prepend manually since relative does not inlcude the glob.
-        inputs = inputs.map { it -> [it[0], file(params.inputspectra + '/' + it[1]), it[1].toString().replaceAll("/","_")] }
+        inputs = inputs.map { it -> [it[0], file(params.inputspectra + '/' + it[1]), it[1].toString().replaceAll("/","_"), params.inputspectra + '/' + it[1]] }
 
-        search_results = searchDataGNPS(inputs)
+        (search_results, file_mapping) = searchDataGNPS(inputs)
 
         chunked_results = chunkResults(search_results.buffer(size: params.merge_batch_size, remainder: true))
        
         // Collect all the batched results and merge them at the end
         merged_results = mergeResults(chunked_results.flatten())
+        mergeFileMapping(file_mapping.collect())
     }
     else if (params.searchtool == "blink"){
         // Must add the prepend manually since relative does not inlcude the glob.
