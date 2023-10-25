@@ -37,24 +37,27 @@ process searchDataGNPS {
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
-    each file(input_library)
-    each file(input_spectrum)
+    tuple file(input_library), file(input_spectrum), val(input_path)
+    // each path(input_library)
+    // each tuple(path(input_spectrum), val(input_path))
 
     output:
     file 'search_results/*' optional true
-
+    //         --output_prefix $input_path \
     """
+    echo $input_spectrum
     mkdir search_results
+    mv -n $input_spectrum $input_path
     python $TOOL_FOLDER/library_search_wrapper.py \
-    $input_spectrum $input_library search_results \
-    $TOOL_FOLDER/convert \
-    $TOOL_FOLDER/main_execmodule.allcandidates \
-    --pm_tolerance $params.pm_tolerance \
-    --fragment_tolerance $params.fragment_tolerance \
-    --topk $params.topk \
-    --library_min_cosine $params.library_min_cosine \
-    --library_min_matched_peaks $params.library_min_matched_peaks \
-    --analog_search $params.analog_search
+        ${input_path}  $input_library search_results \
+        $TOOL_FOLDER/convert \
+        $TOOL_FOLDER/main_execmodule.allcandidates \
+        --pm_tolerance $params.pm_tolerance \
+        --fragment_tolerance $params.fragment_tolerance \
+        --topk $params.topk \
+        --library_min_cosine $params.library_min_cosine \
+        --library_min_matched_peaks $params.library_min_matched_peaks \
+        --analog_search $params.analog_search
     """
 }
 
@@ -110,8 +113,6 @@ process formatBlinkResults {
 }
 
 process chunkResults {
-    publishDir "./nf_output", mode: 'copy'
-
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
@@ -165,16 +166,25 @@ process getGNPSAnnotations {
 
 workflow {
     libraries = Channel.fromPath(params.inputlibraries + "/*.mgf" )
-    spectra = Channel.fromPath(params.inputspectra + "/**" )
+    spectra = Channel.fromPath(params.inputspectra + "/**", relative: true)
     
     if(params.searchtool == "gnps"){
-        search_results = searchDataGNPS(libraries, spectra)
+        // Perform cartesian product producing all combinations of library, spectra
+        inputs = libraries.combine(spectra)
+        // For each path, add the path as a string for file naming. Result is [library_file, spectrum_file, spectrum_path_as_str]
+        // Must add the prepend manually since relative does not inlcude the glob.
+        inputs = inputs.map { it -> [it[0], file(params.inputspectra + '/' + it[1]), it[1].toString().replaceAll("/","_")] }
+
+        search_results = searchDataGNPS(inputs)
+
         chunked_results = chunkResults(search_results.buffer(size: params.merge_batch_size, remainder: true))
        
         // Collect all the batched results and merge them at the end
         merged_results = mergeResults(chunked_results.flatten())
     }
     else if (params.searchtool == "blink"){
+        // Must add the prepend manually since relative does not inlcude the glob.
+        spectra = spectra.map { it -> file(params.inputspectra + '/' + it) }
         search_results = searchDataBlink(libraries, spectra)
 
         formatted_results = formatBlinkResults(search_results)
