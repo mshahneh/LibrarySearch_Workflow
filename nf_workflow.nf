@@ -183,7 +183,7 @@ workflow {
         chunked_results = chunkResults(search_results.buffer(size: params.merge_batch_size, remainder: true))
        
         // Collect all the batched results and merge them at the end
-        merged_results = mergeResults(chunked_results.flatten())
+        merged_results = mergeResults(chunked_results.collect())
     }
     else if (params.searchtool == "blink"){
         // Must add the prepend manually since relative does not inlcude the glob.
