@@ -4,7 +4,7 @@ Views:
 -   name: Search Results List
     displayname: Search Results List
     viewname: summarylist
-    displaytype: datatable
+    displaytype: datatable_serverbig
     parameters:
         filename: nf_output/merged_results_with_gnps.tsv
         columns:
