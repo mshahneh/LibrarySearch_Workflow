@@ -99,6 +99,10 @@ def main():
 
     parser.add_argument('--analog_search', default=0, help='Turn on analog search, 0 or 1', type=int)
 
+    # This is good for bookkeeping in GNPS2 if you need the full path
+    parser.add_argument('--full_relative_query_path', default=None, help='This is the original full relative path of the input file')
+    
+
 
     args = parser.parse_args()
 
@@ -135,9 +139,20 @@ def main():
     # Fixing Results, by basename
     results_df["SpectrumFile"] = results_df["SpectrumFile"].apply(lambda x: os.path.basename(x))
 
+    # We should rewrite if we have the full path
+    if args.full_relative_query_path is not None:
+        results_df["SpectrumFile"] = args.full_relative_query_path
+
+        # Create a safe filename from a full path using from args.full_relative_query_path
+        safe_filename = args.full_relative_query_path.replace("/", "_").replace(".", "_").replace(" ", "_")
+
+        # lets hash safe_filename to make it shorter
+        safe_filename = str(uuid.uuid3(uuid.NAMESPACE_DNS, safe_filename)) + ":" + safe_filename[-20:]
+
+        # fixing the output filename
+        output_results_file = os.path.join(args.result_folder, safe_filename + "_" + os.path.basename(args.library_file) + ".tsv")
+
     results_df.to_csv(output_results_file, sep="\t", index=False)
-
-
 
 
 
