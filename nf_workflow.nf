@@ -46,8 +46,8 @@ process searchDataGNPS {
     mkdir search_results
 
     python $TOOL_FOLDER/library_search_wrapper.py \
-        ${input_spectrum} \
-        $input_library \
+        "$input_spectrum" \
+        "$input_library" \
         search_results \
         $TOOL_FOLDER/convert \
         $TOOL_FOLDER/main_execmodule.allcandidates \
