@@ -51,13 +51,13 @@ process searchDataGNPS {
         search_results \
         $TOOL_FOLDER/convert \
         $TOOL_FOLDER/main_execmodule.allcandidates \
-        --pm_tolerance $params.pm_tolerance \
-        --fragment_tolerance $params.fragment_tolerance \
+        --pm_tolerance "$params.pm_tolerance" \
+        --fragment_tolerance "$params.fragment_tolerance" \
         --topk $params.topk \
         --library_min_cosine $params.library_min_cosine \
         --library_min_matched_peaks $params.library_min_matched_peaks \
-        --analog_search $params.analog_search \
-        --full_relative_query_path $full_path
+        --analog_search "$params.analog_search" \
+        --full_relative_query_path "$full_path"
     """
 }
 
