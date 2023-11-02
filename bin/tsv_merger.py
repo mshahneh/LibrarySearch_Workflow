@@ -7,6 +7,7 @@ import os
 import pandas as pd
 from collections import defaultdict
 import argparse
+import uuid
 import glob
 
 def _parse_file(input_filename):
@@ -25,6 +26,8 @@ def main():
     parser.add_argument('input_folder', help='input_folder')
     parser.add_argument('output_file', help='output_file')
     parser.add_argument('--topk', default=1, help='topk')
+
+    parser.add_argument('--add_random_suffix', action='store_true', help='add_random_suffix', default=False)
 
     args = parser.parse_args()
 
@@ -55,7 +58,10 @@ def main():
     all_results_df = all_results_df.drop(columns=["key"])
 
     # writing results
-    all_results_df.to_csv(args.output_file, sep="\t", index=False)
+    if args.add_random_suffix:
+        all_results_df.to_csv(args.output_file.replace(".tsv", "{}.tsv".format(str(uuid.uuid4()))), sep="\t", index=False)
+    else:
+        all_results_df.to_csv(args.output_file, sep="\t", index=False)
 
 if __name__ == "__main__":
     main()

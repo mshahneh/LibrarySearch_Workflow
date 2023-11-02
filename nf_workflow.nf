@@ -119,13 +119,14 @@ process chunkResults {
     path to_merge, stageAs: './results/*'  // A directory of files, "results/*"
 
     output:
-    path "batched_results.tsv"
+    path "batched_results*.tsv"
 
     """
     python $TOOL_FOLDER/tsv_merger.py \
     results \
     batched_results.tsv \
-    --topk $params.topk
+    --topk $params.topk \
+    --add_random_suffix
     """
 }
 
