@@ -116,12 +116,13 @@ process chunkResults {
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
-    path to_merge, stageAs: './results/*'  // A directory of files, "results/*"
+    path to_merge, stageAs: './results/*' // To avoid naming collisions
 
     output:
     path "batched_results.tsv"
 
     """
+
     python $TOOL_FOLDER/tsv_merger.py \
     results \
     batched_results.tsv \
@@ -134,7 +135,7 @@ process mergeResults {
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
-    path to_merge, stageAs: './results/*' // To avoid naming collisions
+    path 'batched_results.tsv', stageAs: './results/batched_results*.tsv' // Will automatically number inputs to avoid name collisions
 
     output:
     path 'merged_results.tsv'

@@ -7,6 +7,7 @@ import os
 import pandas as pd
 from collections import defaultdict
 import argparse
+import uuid
 import glob
 
 def _parse_file(input_filename):
