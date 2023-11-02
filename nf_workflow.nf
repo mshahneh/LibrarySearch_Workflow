@@ -135,7 +135,7 @@ process mergeResults {
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
-    path to_merge, stageAs: 'results/results_file_??????.tsv'  // A directory of files
+    path 'batched_results.tsv', stageAs: './results/batched_results*.tsv' // Will automatically number inputs to avoid name collisions
 
     output:
     path 'merged_results.tsv'
