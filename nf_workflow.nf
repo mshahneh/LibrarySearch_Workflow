@@ -116,17 +116,17 @@ process chunkResults {
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
-    path to_merge, stageAs: './results/*'  // A directory of files, "results/*"
+    path to_merge, stageAs: './results/*' // To avoid naming collisions
 
     output:
-    path "batched_results*.tsv"
+    path "batched_results.tsv"
 
     """
+
     python $TOOL_FOLDER/tsv_merger.py \
     results \
     batched_results.tsv \
-    --topk $params.topk \
-    --add_random_suffix
+    --topk $params.topk
     """
 }
 
@@ -135,7 +135,7 @@ process mergeResults {
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
-    path to_merge, stageAs: './results/*' // To avoid naming collisions
+    path to_merge, stageAs: 'results/results_file_??????.tsv'  // A directory of files
 
     output:
     path 'merged_results.tsv'
