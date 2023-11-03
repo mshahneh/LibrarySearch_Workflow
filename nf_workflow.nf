@@ -119,7 +119,7 @@ process chunkResults {
     path to_merge, stageAs: './results/*' // To avoid naming collisions
 
     output:
-    path "batched_results.tsv"
+    path "batched_results.tsv" optional true
 
     """
 
