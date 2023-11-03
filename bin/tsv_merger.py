@@ -37,8 +37,10 @@ def main():
 
         if len(temp_df) > 0:
             all_results_list.append(temp_df)
-    
-    if len(all_results_list) == 1:
+            
+    if len(all_results_list) == 0:
+        return
+    elif len(all_results_list) == 1:
         # If there is nothing to concat, skip concatentation
         all_results_df = all_results_list[0]
     else:
