@@ -36,6 +36,8 @@ process searchDataGNPS {
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
+    cache 'lenient'
+
     input:
     tuple file(input_library), file(input_spectrum), val(input_path), val(full_path)
 
@@ -43,7 +45,7 @@ process searchDataGNPS {
     file 'search_results/*' optional true
 
     """
-    mkdir search_results
+    mkdir -p search_results
 
     python $TOOL_FOLDER/library_search_wrapper.py \
         "$input_spectrum" \
@@ -78,7 +80,7 @@ process searchDataBlink {
     def input_spectrum_abs = input_spectrum.toRealPath()
     def input_library_abs = input_library.toRealPath()
     """
-    mkdir search_results
+    mkdir -p search_results
     echo $workDir
     previous_cwd=\$(pwd)
     echo \$previous_cwd
@@ -115,6 +117,8 @@ process formatBlinkResults {
 process chunkResults {
     conda "$TOOL_FOLDER/conda_env.yml"
 
+    cache 'lenient'
+
     input:
     path to_merge, stageAs: './results/*' // To avoid naming collisions
 
@@ -134,6 +138,8 @@ process chunkResults {
 process mergeResults {
     conda "$TOOL_FOLDER/conda_env.yml"
 
+    cache 'lenient'
+
     input:
     path 'batched_results.tsv', stageAs: './results/batched_results*.tsv' // Will automatically number inputs to avoid name collisions
 
@@ -150,6 +156,8 @@ process mergeResults {
 
 process getGNPSAnnotations {
     publishDir "./nf_output", mode: 'copy'
+
+    cache 'lenient'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
