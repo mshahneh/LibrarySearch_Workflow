@@ -136,6 +136,8 @@ process chunkResults {
 
 // Use a separate process to merge all the batched results
 process mergeResults {
+    publishDir "./nf_output", mode: 'copy'
+    
     conda "$TOOL_FOLDER/conda_env.yml"
 
     cache 'lenient'
