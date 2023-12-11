@@ -136,7 +136,7 @@ def enrich_output(input_filename, output_filename, topk=None):
 
         output_result_dict["tags"] = (tag_string)
 
-        #Getting molecule explorer information
+        # Getting molecule explorer information
         # compound_name = gnps_library_spectrum["annotations"][0]["Compound_Name"].replace("\t", "")
         # compound_filtered_df = molecule_explorer_df[molecule_explorer_df["compound_name"] == compound_name]
         # if len(compound_filtered_df) == 1:
