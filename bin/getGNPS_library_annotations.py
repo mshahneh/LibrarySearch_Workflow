@@ -9,10 +9,29 @@ from collections import defaultdict
 import argparse
 import urllib.parse
 from tqdm import tqdm
+from functools import lru_cache 
 
 # GLOBALS
 # TODO: Use LRU Caching Mechanism
 spectrum_id_cache = {}
+
+
+@lru_cache
+def _get_gnps_library_spectrum(spectrum_id):
+    # TODO: We can better sanity check the spectrum_id itself
+
+    try:
+        gnps_library_spectrum = ming_gnps_library.get_library_spectrum(spectrum_id)
+
+        #Making sure not an error
+        gnps_library_spectrum["annotations"][0]["Compound_Name"]
+    except KeyboardInterrupt:
+        raise
+    except:
+        gnps_library_spectrum = None
+        pass
+
+    return gnps_library_spectrum
 
 def _prep_library_dict(library_summary_df):
     library_dict = {}
@@ -26,20 +45,9 @@ def _enrich_gnps_annotation(output_result_dict):
 
     print(spectrum_id)
 
-    gnps_library_spectrum = None
-    try:
-        gnps_library_spectrum = None
-        if spectrum_id in spectrum_id_cache:
-            gnps_library_spectrum = spectrum_id_cache[spectrum_id]
-        else:
-            gnps_library_spectrum = ming_gnps_library.get_library_spectrum(spectrum_id)
-            spectrum_id_cache[spectrum_id] = gnps_library_spectrum
-
-        #Making sure not an error
-        gnps_library_spectrum["annotations"][0]["Compound_Name"]
-    except KeyboardInterrupt:
-        raise
-    except:
+    gnps_library_spectrum = _get_gnps_library_spectrum(spectrum_id)
+    
+    if gnps_library_spectrum is None:
         return output_result_dict
 
     output_result_dict["Compound_Name"] = (gnps_library_spectrum["annotations"][0]["Compound_Name"].replace("\t", ""))
