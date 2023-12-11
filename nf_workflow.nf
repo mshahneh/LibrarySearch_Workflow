@@ -165,6 +165,7 @@ process getGNPSAnnotations {
 
     input:
     path "merged_results.tsv"
+    path "library_summary.tsv"
 
     output:
     path 'merged_results_with_gnps.tsv'
@@ -172,7 +173,8 @@ process getGNPSAnnotations {
     """
     python $TOOL_FOLDER/getGNPS_library_annotations.py \
     merged_results.tsv \
-    merged_results_with_gnps.tsv
+    merged_results_with_gnps.tsv \
+    --librarysummary library_summary.tsv
     """
 }
 
@@ -204,8 +206,7 @@ workflow {
     library_summary_ch = summaryLibrary(libraries)
 
     // Merging all these tsv files from library_summary_ch within nextflow
-    library_summary_merged_ch = library_summary_ch.collectFile(name: "library_summary.tsv", storeDir: "./nf_output", keepHeader: true)
-    
+    library_summary_merged_ch = library_summary_ch.collectFile(name: "library_summary.tsv", keepHeader: true)
     
     if(params.searchtool == "gnps"){
         // Perform cartesian product producing all combinations of library, spectra
@@ -232,5 +233,5 @@ workflow {
         merged_results = mergeResults(formatted_results.collect())
     }
 
-    getGNPSAnnotations(merged_results)
+    getGNPSAnnotations(merged_results, library_summary_merged_ch)
 }
