@@ -287,8 +287,6 @@ def enrich_output(input_filename, output_filename, topk=None, library_summary_df
 
     pd.DataFrame(output_list).to_csv(output_filename, sep="\t", index=False)
 
-
-
 def main():
     parser = argparse.ArgumentParser(description='Pulling down GNPS identifcations.')
     parser.add_argument("input_filename")
