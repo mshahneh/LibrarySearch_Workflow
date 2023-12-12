@@ -36,15 +36,6 @@ Views:
         `;}},
         {
             "targets": 10, "data": null, "render": function ( data, type, row, meta ) {
-                # check if the row has smiles
-                if (row["Smiles"] == undefined) {
-                    return "No SMILES";
-                }
-                else{
-                    return `
-                        <a target="_blank" href="https://modsitelocalization.gnps2.org/?USI1=mzspec:GNPS:GNPS-LIBRARY:accession:${row["SpectrumID"]}&USI2=https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-inputspectra/${row["SpectrumFile"]}:scan:${row["#Scan#"]}&SMILES1=${row["Smiles"]}">Check on ModiFinder</a>
-                    `;
-                }
-            }
-        }
+                return row["Smiles"]? `<a target="_blank" href="https://modsitelocalization.gnps2.org/?USI1=mzspec:GNPS:GNPS-LIBRARY:accession:${row["SpectrumID"]}&USI2=https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-inputspectra/${row["SpectrumFile"]}:scan:${row["#Scan#"]}&SMILES1=${row["Smiles"]}">Check on ModiFinder</a>` : `<p>${row["Smiles"]}</p>`;
+            }}
         ]'
