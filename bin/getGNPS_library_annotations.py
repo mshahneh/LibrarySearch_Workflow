@@ -41,12 +41,12 @@ def _prep_library_dict(library_summary_df):
 
 
 def _enrich_gnps_annotation(output_result_dict):
-    spectrum_id = output_result_dict["spectrum_id"]
+    spectrum_id = output_result_dict["SpectrumID"]
 
     print(spectrum_id)
 
     gnps_library_spectrum = _get_gnps_library_spectrum(spectrum_id)
-    
+
     if gnps_library_spectrum is None:
         return output_result_dict
 
@@ -92,9 +92,6 @@ def _enrich_gnps_annotation(output_result_dict):
     else:
         print("Invalid Library Class", gnps_library_spectrum["annotations"][0]["Library_Class"])
 
-
-    if "full_CCMS_path" in result_obj:	
-        output_result_dict["full_CCMS_path"] = (result_obj["full_CCMS_path"])
 
     tag_list = [ (tag["tag_desc"] + "[" + tag["tag_type"] + "]") for tag in gnps_library_spectrum["spectrum_tags"]]
     tag_string = "||".join(tag_list).replace("\t", "")
@@ -279,7 +276,7 @@ def enrich_output(input_filename, output_filename, topk=None, library_summary_df
 
         # checking if GNPS
         if "CCMSLIB" in str(spectrum_id):
-            output_result_dict = _enrich_gnps_annotation(spectrum_id, output_result_dict)
+            output_result_dict = _enrich_gnps_annotation(output_result_dict)
         else:
             # checking if in library summary
             if library_summary_df is not None:
