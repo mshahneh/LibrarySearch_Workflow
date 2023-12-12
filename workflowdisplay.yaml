@@ -4,7 +4,7 @@ Views:
 -   name: Search Results List
     displayname: Search Results List
     viewname: summarylist
-    displaytype: datatable
+    displaytype: datatable #datatable_serverbig #datatable
     parameters:
         filename: nf_output/merged_results_with_gnps.tsv
         columns:
@@ -30,7 +30,7 @@ Views:
                 data: SpectrumID
             -   title: "Smiles"
                 data: Smiles
-            -   title: "Check on ModiFinder"
+            -   title: "Use ModiFinder"
                 data:
         columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
         return `
@@ -38,6 +38,6 @@ Views:
         `;}},
         {
             "targets": 11, "data": null, "render": function ( data, type, row, meta ) {
-                return row["Smiles"]? `<a target="_blank" href="https://modsitelocalization.gnps2.org/?USI1=mzspec:GNPS:GNPS-LIBRARY:accession:${row["SpectrumID"]}&USI2=https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-inputspectra/${row["SpectrumFile"]}:scan:${row["#Scan#"]}&SMILES1=${row["Smiles"]}">Check on ModiFinder</a>` : `<p>${row["Smiles"]}</p>`;
+                return row["Smiles"]? `<a target="_blank" href="https://modsitelocalization.gnps2.org/?USI1=mzspec:GNPS:GNPS-LIBRARY:accession:${row["SpectrumID"]}&USI2=https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-inputspectra/${row["SpectrumFile"]}:scan:${row["#Scan#"]}&SMILES1=${row["Smiles"]}">Check on ModiFinder</a>` : `<p>Unknown Structure</p>`;
             }}
         ]'
