@@ -111,8 +111,8 @@ def _enrich_librarysummary_annotations(output_result_dict, library_dict=None):
         output_result_dict["Instrument"] = (library_spectrum["instrument"].replace("\t", ""))
         output_result_dict["Adduct"] = (library_spectrum["adduct"].replace("\t", ""))
         output_result_dict["Charge"] = (library_spectrum["charge"].replace("\t", ""))
-        output_result_dict["Smiles"] = (library_spectrum["smiles"].replace("\t", ""))
-        output_result_dict["IonMode"] = (library_spectrum["ion_mode"].replace("\t", ""))
+        output_result_dict["Smiles"] = (str(library_spectrum["smiles"])).replace("\t", "")
+        #output_result_dict["IonMode"] = (library_spectrum["ion_mode"].replace("\t", ""))
 
     return output_result_dict
 
