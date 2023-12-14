@@ -24,7 +24,7 @@ def main():
             instrument = spectrum['params'].get('instrument', "")
             ion_source = spectrum['params'].get('ion_source', "")
             charge = spectrum['params'].get('charge', 0)
-
+            adduct = spectrum['params'].get('adduct', "NA")
 
             output_dictionary = {}
             output_dictionary["spectrum_id"] = spectrum_id
@@ -34,6 +34,7 @@ def main():
             output_dictionary["instrument"] = instrument
             output_dictionary["ion_source"] = ion_source
             output_dictionary["charge"] = charge
+            output_dictionary["adduct"] = adduct
             
             output_list.append(output_dictionary)
 
