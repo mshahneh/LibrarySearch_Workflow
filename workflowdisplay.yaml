@@ -10,6 +10,8 @@ Views:
         columns:
             -   title: "View Spectra"
                 data: 
+            -   title: "Use ModiFinder"
+                data:
             -   title: "Query Scan"
                 data: "#Scan#"
             -   title: "Query File"
@@ -30,14 +32,17 @@ Views:
                 data: SpectrumID
             -   title: "Smiles"
                 data: Smiles
-            -   title: "Use ModiFinder"
-                data:
-        columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
+        columnDefs: '[ 
+            {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
         return `
             <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-inputspectra/${row["SpectrumFile"]}:scan:${row["#Scan#"]}&usi2=mzspec:GNPS:GNPS-LIBRARY:accession:${row["SpectrumID"]}">View Mirror</a>
         `;}},
         {
-            "targets": 11, "data": null, "render": function ( data, type, row, meta ) {
+            "targets": 1, "data": null, "render": function ( data, type, row, meta ) {
                 return row["Smiles"]? `<a target="_blank" href="https://modsitelocalization.gnps2.org/?USI1=mzspec:GNPS:GNPS-LIBRARY:accession:${row["SpectrumID"]}&USI2=mzspec:GNPS2:TASK-${task}-inputspectra/${row["SpectrumFile"]}:scan:${row["#Scan#"]}&SMILES1=${row["Smiles"]}">Check on ModiFinder</a>` : `<p>Unknown Structure</p>`;
-            }}
+            }},
+        {"targets": 11,"data": null,"render": function ( data, type, row, meta ) {
+        return `
+            <img src="https://structure.gnps2.org/structureimg?smiles=${row["Smiles"]}"/>
+        `;}},
         ]'
