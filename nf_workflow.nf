@@ -156,7 +156,7 @@ process mergeResults {
     """
 }
 
-process getGNPSAnnotations {
+process librarygetGNPSAnnotations {
     publishDir "./nf_output", mode: 'copy'
 
     cache 'lenient'
@@ -199,18 +199,18 @@ process summaryLibrary {
 }
 
 workflow {
-    libraries = Channel.fromPath(params.inputlibraries + "/*.mgf" )
+    libraries_ch = Channel.fromPath(params.inputlibraries + "/*.mgf" )
     spectra = Channel.fromPath(params.inputspectra + "/**", relative: true)
 
     // Lets create a summary for the library files
-    library_summary_ch = summaryLibrary(libraries)
+    library_summary_ch = summaryLibrary(libraries_ch)
 
     // Merging all these tsv files from library_summary_ch within nextflow
     library_summary_merged_ch = library_summary_ch.collectFile(name: "library_summary.tsv", keepHeader: true)
     
     if(params.searchtool == "gnps"){
         // Perform cartesian product producing all combinations of library, spectra
-        inputs = libraries.combine(spectra)
+        inputs = libraries_ch.combine(spectra)
 
         // For each path, add the path as a string for file naming. Result is [library_file, spectrum_file, spectrum_path_as_str]
         // Must add the prepend manually since relative does not include the glob.
@@ -226,12 +226,12 @@ workflow {
     else if (params.searchtool == "blink"){
         // Must add the prepend manually since relative does not inlcude the glob.
         spectra = spectra.map { it -> file(params.inputspectra + '/' + it) }
-        search_results = searchDataBlink(libraries, spectra)
+        search_results = searchDataBlink(libraries_ch, spectra)
 
         formatted_results = formatBlinkResults(search_results)
 
         merged_results = mergeResults(formatted_results.collect())
     }
 
-    getGNPSAnnotations(merged_results, library_summary_merged_ch)
+    librarygetGNPSAnnotations(merged_results, library_summary_merged_ch)
 }
