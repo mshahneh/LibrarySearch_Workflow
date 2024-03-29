@@ -32,6 +32,8 @@ Views:
                 data: SpectrumID
             -   title: "Smiles"
                 data: Smiles
+            -   title: "reactions"
+                data: reactions
         columnDefs: '[ 
             {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
         return `
