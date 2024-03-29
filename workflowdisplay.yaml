@@ -4,12 +4,14 @@ Views:
 -   name: Search Results List
     displayname: Search Results List
     viewname: summarylist
-    displaytype: datatable_serverbig
+    displaytype: datatable_serverbig #datatable
     parameters:
         filename: nf_output/merged_results_with_gnps.tsv
         columns:
             -   title: "View Spectra"
                 data: 
+            -   title: "Use ModiFinder"
+                data:
             -   title: "Query Scan"
                 data: "#Scan#"
             -   title: "Query File"
@@ -19,7 +21,7 @@ Views:
             -   title: "Ion"
                 data: Ion_Source
             -   title: "Precursor m/z"
-                data: Precursor_MZ
+                data: SpecMZ
             -   title: "Cosine"
                 data: MQScore
             -   title: "Shared Peaks"
@@ -28,7 +30,19 @@ Views:
                 data: MassDiff
             -   title: "SpectrumID"
                 data: SpectrumID
-        columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
+            -   title: "Smiles"
+                data: Smiles
+        columnDefs: '[ 
+            {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
         return `
             <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-inputspectra/${row["SpectrumFile"]}:scan:${row["#Scan#"]}&usi2=mzspec:GNPS:GNPS-LIBRARY:accession:${row["SpectrumID"]}">View Mirror</a>
-        `;}}]'
+        `;}},
+        {
+            "targets": 1, "data": null, "render": function ( data, type, row, meta ) {
+                return row["Smiles"]? `<a target="_blank" href="https://modifinder.gnps2.org/?USI1=mzspec:GNPS:GNPS-LIBRARY:accession:${row["SpectrumID"]}&USI2=mzspec:GNPS2:TASK-${task}-inputspectra/${row["SpectrumFile"]}:scan:${row["#Scan#"]}&SMILES1=${row["Smiles"]}">Check on ModiFinder</a>` : `<p>Unknown Structure</p>`;
+            }},
+        {"targets": 11,"data": null,"render": function ( data, type, row, meta ) {
+        return `
+            <img src="https://structure.gnps2.org/structureimg?smiles=${row["Smiles"]}"/>
+        `;}},
+        ]'

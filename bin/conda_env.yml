@@ -9,3 +9,4 @@ dependencies:
     - requests
     - requests_cache
     - tqdm
+    - pyteomics

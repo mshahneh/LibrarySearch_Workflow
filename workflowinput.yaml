@@ -1,7 +1,7 @@
 workflowname: librarysearch_workflow_reactions
 workflowdescription: librarysearch_workflow_reactions
 workflowlongdescription: This is a library search workflow for GNPS2
-workflowversion: "0.2.1"
+workflowversion: "0.2.2"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false

@@ -158,7 +158,7 @@ process mergeResults {
     """
 }
 
-process getGNPSAnnotations {
+process librarygetGNPSAnnotations {
     publishDir "./nf_output", mode: 'copy'
 
     cache 'lenient'
@@ -167,6 +167,7 @@ process getGNPSAnnotations {
 
     input:
     path "merged_results.tsv"
+    path "library_summary.tsv"
 
     output:
     path 'merged_results_with_gnps.tsv'
@@ -174,7 +175,8 @@ process getGNPSAnnotations {
     """
     python $TOOL_FOLDER/getGNPS_library_annotations.py \
     merged_results.tsv \
-    merged_results_with_gnps.tsv
+    merged_results_with_gnps.tsv \
+    --librarysummary library_summary.tsv
     """
 }
 
@@ -198,19 +200,44 @@ process Reactions {
     merged_results_with_gnps.tsv \
     ${params.inputspectra}
     """
+}
 
+process summaryLibrary {
+    publishDir "./nf_output", mode: 'copy'
+
+    cache 'lenient'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    path library_file
+
+    output:
+    path '*.tsv'
+
+    """
+    python $TOOL_FOLDER/library_summary.py \
+    $library_file \
+    ${library_file}.tsv
+    """
 }
 
 workflow {
-    libraries = Channel.fromPath(params.inputlibraries + "/*.mgf" )
+    libraries_ch = Channel.fromPath(params.inputlibraries + "/*.mgf" )
     spectra = Channel.fromPath(params.inputspectra + "/**", relative: true)
+
+    // Lets create a summary for the library files
+    library_summary_ch = summaryLibrary(libraries_ch)
+
+    // Merging all these tsv files from library_summary_ch within nextflow
+    library_summary_merged_ch = library_summary_ch.collectFile(name: "library_summary.tsv", keepHeader: true)
     
     if(params.searchtool == "gnps"){
         // Perform cartesian product producing all combinations of library, spectra
-        inputs = libraries.combine(spectra)
+        inputs = libraries_ch.combine(spectra)
 
         // For each path, add the path as a string for file naming. Result is [library_file, spectrum_file, spectrum_path_as_str]
-        // Must add the prepend manually since relative does not inlcude the glob.
+        // Must add the prepend manually since relative does not include the glob.
         inputs = inputs.map { it -> [it[0], file(params.inputspectra + '/' + it[1]), it[1].toString().replaceAll("/","_"), it[1]] }
 
         (search_results) = searchDataGNPS(inputs)
@@ -223,14 +250,13 @@ workflow {
     else if (params.searchtool == "blink"){
         // Must add the prepend manually since relative does not inlcude the glob.
         spectra = spectra.map { it -> file(params.inputspectra + '/' + it) }
-        search_results = searchDataBlink(libraries, spectra)
+        search_results = searchDataBlink(libraries_ch, spectra)
 
         formatted_results = formatBlinkResults(search_results)
 
         merged_results = mergeResults(formatted_results.collect())
     }
 
-    gnps_annotations = getGNPSAnnotations(merged_results)
+    gnps_annotations = librarygetGNPSAnnotations(merged_results, library_summary_merged_ch)
     Reactions(gnps_annotations)
-    
 }
