@@ -29,6 +29,8 @@ params.analog_max_shift = 1999
 params.blink_ionization = "positive"
 params.blink_minpredict = 0.01
 
+params.reactivity_check = false
+
 TOOL_FOLDER = "$baseDir/bin"
 
 process searchDataGNPS {
@@ -174,6 +176,28 @@ process getGNPSAnnotations {
     merged_results.tsv \
     merged_results_with_gnps.tsv
     """
+}
+
+process Reactions {
+    publishDir "./nf_output", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    path "merged_results_with_gnps.tsv"
+
+    output:
+    path 'merged_results_with_gnps.tsv'
+
+    // when reactivity check is true
+    when:
+    params.reactivity_check
+
+    """
+    python $TOOL_FOLDER/reactivity_check.py \
+    merged_results_with_gnps.tsv \
+    ${params.inputspectra}
+    """
 
 }
 
@@ -206,5 +230,7 @@ workflow {
         merged_results = mergeResults(formatted_results.collect())
     }
 
-    getGNPSAnnotations(merged_results)
+    gnps_annotations = getGNPSAnnotations(merged_results)
+    Reactions(gnps_annotations)
+    
 }

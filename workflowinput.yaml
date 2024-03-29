@@ -1,5 +1,5 @@
-workflowname: librarysearch_workflow
-workflowdescription: librarysearch_workflow
+workflowname: librarysearch_workflow_reactions
+workflowdescription: librarysearch_workflow_reactions
 workflowlongdescription: This is a library search workflow for GNPS2
 workflowversion: "0.2.1"
 workflowfile: nf_workflow.nf
@@ -87,6 +87,16 @@ parameterlist:
       nf_paramname: topk
       formplaceholder: Enter the topk
       formvalue: "1"
+
+    - displayname: check for reactions
+      paramtype: select
+      nf_paramname: reactivity_check
+      formvalue: false
+      options:
+        - value: false
+          display: No
+        - value: true
+          display: Yes
 
     - displayname: Blink Parameters
       paramtype: section
