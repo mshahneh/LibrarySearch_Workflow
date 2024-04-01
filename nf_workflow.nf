@@ -29,7 +29,7 @@ params.analog_max_shift = 1999
 params.blink_ionization = "positive"
 params.blink_minpredict = 0.01
 
-params.reactivity_check = false
+// params.reactivity_check = false
 
 TOOL_FOLDER = "$baseDir/bin"
 
@@ -191,9 +191,9 @@ process Reactions {
     output:
     path 'merged_results_with_gnps.tsv'
 
-    // when reactivity check is true
-    when:
-    params.reactivity_check
+    // // when reactivity check is true
+    // when:
+    // params.reactivity_check
 
     """
     python $TOOL_FOLDER/reactivity_check.py \

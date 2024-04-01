@@ -1,14 +1,7 @@
 import pandas as pd
-import pymzml
 import numpy as np
-import os
-import pickle
 import pandas as pd
-from tqdm import tqdm
-import pyteomics
 from pyteomics import mzml, auxiliary, mgf
-import matplotlib.pyplot as plt
-from scipy.stats import pearsonr
 import argparse
 import json
 from rdkit import Chem
@@ -29,6 +22,13 @@ def _read_mgf(mgf_path: str) -> pd.DataFrame:
     msms_df = pd.DataFrame(msms_df)
     return msms_df
 
+def count_reactivity(Mol, SMARTS_list):
+    reactivity = 0
+    for substruct in SMARTS_list:
+        if Mol.HasSubstructMatch(substruct):
+            reactivity += 1
+    return reactivity
+
 def main(annotations, msms_df):
     contains_educt = msms_df[~msms_df['online_reactivity'].isna()]
 
@@ -41,14 +41,12 @@ def main(annotations, msms_df):
             reaction_smarts.append(Chem.MolFromSmarts(item['educt_smarts']))
 
         scanNumber = int(row['scans'])
-        annotations_row = annotations[(annotations['#Scan#'] == scanNumber) & (~annotations['Smiles'].isna())]
+        annotation_rows = annotations[(annotations['#Scan#'] == scanNumber) & (~annotations['Smiles'].isna())]
 
-        for i, match_row in annotations_row.iterrows():
+        for i, match_row in annotation_rows.iterrows():
             try:
                 Mol = Chem.MolFromSmiles(match_row['Smiles'])
-                for substruct in reaction_smarts:
-                    if Mol.HasSubstructMatch(substruct):
-                        annotations.loc[i, 'reactivity'] = annotations.loc[i, 'reactivity'] + 1
+                annotations.loc[i, 'reactivity'] = annotations.loc[i, 'reactivity'] + count_reactivity(Mol, reaction_smarts)
             except:
                 pass
 
@@ -65,7 +63,8 @@ if __name__ == "__main__":
     annotations = pd.read_csv(args.gnps_annotations, sep="\t")
     # if the spectrum_file is not MGF, return
     if not args.spectrum_file.endswith(".mgf"):
-        annotations.to_csv(args.gnps_annotations)
+        annotations['reactivity'] = 0
+        annotations.to_csv(args.gnps_annotations, sep="\t")
     else:
         # if the spectrum_file is MGF, read the MGF file
         msms_df = _read_mgf(args.spectrum_file)
