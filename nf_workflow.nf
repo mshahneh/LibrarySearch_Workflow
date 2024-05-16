@@ -17,6 +17,9 @@ params.library_min_matched_peaks = 6
 
 params.merge_batch_size = 1000 //Not a UI parameter
 
+// Filtering structures
+params.filtertostructures = "0" // 1 means we filter to only hits with structures
+
 //TODO: Implement This
 params.filter_precursor = 1
 params.filter_window = 1

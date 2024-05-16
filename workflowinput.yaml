@@ -80,13 +80,23 @@ parameterlist:
         - value: "1"
           display: "Yes"
 
-    
-
     - displayname: Top-K
       paramtype: text
       nf_paramname: topk
       formplaceholder: Enter the topk
       formvalue: "1"
+
+    - displayname: Filter Only To Compounds with Structures
+      paramtype: text
+      nf_paramname: filtertostructures
+      formplaceholder: Enter the topk
+      formvalue: "0"
+      options:
+        - value: "0"
+          display: "No"
+        - value: "1"
+          display: "Yes"
+
 
     - displayname: Blink Parameters
       paramtype: section
