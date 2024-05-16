@@ -177,7 +177,29 @@ process librarygetGNPSAnnotations {
     python $TOOL_FOLDER/getGNPS_library_annotations.py \
     merged_results.tsv \
     merged_results_with_gnps.tsv \
-    --librarysummary library_summary.tsv
+    --librarysummary library_summary.tsv \
+    --topk $params.topk \
+    --filtertostructures $params.filtertostructures
+    """
+}
+
+process filtertop1Annotations {
+    publishDir "./nf_output", mode: 'copy'
+
+    cache 'lenient'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    path "merged_results_with_gnps.tsv"
+
+    output:
+    path 'merged_results_with_gnps_top1.tsv'
+
+    """
+    python $TOOL_FOLDER/filter_top1_hits.py \
+    merged_results_with_gnps.tsv \
+    merged_results_with_gnps_top1.tsv
     """
 }
 
@@ -236,5 +258,8 @@ workflow {
         merged_results = mergeResults(formatted_results.collect())
     }
 
-    librarygetGNPSAnnotations(merged_results, library_summary_merged_ch)
+    annotation_results_ch = librarygetGNPSAnnotations(merged_results, library_summary_merged_ch)
+
+    // Getting another output that is only the top 1
+    filtertop1Annotations(annotation_results_ch)
 }
