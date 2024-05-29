@@ -1,7 +1,7 @@
 workflowname: librarysearch_workflow
 workflowdescription: librarysearch_workflow
 workflowlongdescription: This is a library search workflow for GNPS2
-workflowversion: "2024.05.17"
+workflowversion: "2024.05.29"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
