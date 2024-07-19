@@ -32,7 +32,7 @@ params.analog_max_shift = 1999
 params.blink_ionization = "positive"
 params.blink_minpredict = 0.01
 
-TOOL_FOLDER = "$baseDir/bin"
+TOOL_FOLDER = "$moduleDir/bin"
 
 process searchDataGNPS {
     //publishDir "./nf_output", mode: 'copy'
