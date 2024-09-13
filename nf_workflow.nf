@@ -141,7 +141,7 @@ workflow {
         analog_max_shift: params.analog_max_shift,
         blink_ionization: params.blink_ionization,
         blink_minpredict: params.blink_minpredict,
-        publish_dir: params.publish_dir
+        publishDir: params.publishDir
     ]
     
     Main(input_map)
