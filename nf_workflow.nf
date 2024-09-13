@@ -34,8 +34,9 @@ params.blink_minpredict = 0.01
 
 TOOL_FOLDER = "$moduleDir/bin"
 MODULES_FOLDER = "$TOOL_FOLDER/NextflowModules"
+params.publishDir = "./nf_output"
 
-include {summaryLibrary; searchDataGNPS; searchDataBlink; mergeResults; librarygetGNPSAnnotations; filtertop1Annotations; formatBlinkResults; chunkResults} from "$MODULES_FOLDER/nf_library_search_modules.nf"
+include {summaryLibrary; searchDataGNPS; searchDataBlink; mergeResults; librarygetGNPSAnnotations; filtertop1Annotations; formatBlinkResults; chunkResults} from "$MODULES_FOLDER/nf_library_search_modules.nf" addParams(publishDir: params.publishDir)
 
 workflow Main{
     take:
