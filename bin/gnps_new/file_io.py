@@ -1,5 +1,5 @@
 import os
-from pyteomics import mzml, mzxml
+from pyteomics import mzml, mzxml, mgf
 import numpy as np
 from _utils import Spectrum
 
@@ -80,7 +80,7 @@ def read_mgf_spectrum(file_obj):
     return None
 
 
-def iterate_mgf(mgf_path, buffer_size=1048576):
+def iterate_gnps_lib_mgf(mgf_path, buffer_size=1048576):
     """Iterate through spectra in an MGF file efficiently using buffered reading.
 
     Args:
@@ -98,11 +98,10 @@ def iterate_mgf(mgf_path, buffer_size=1048576):
             yield spectrum
 
 
-
-def process_file(file_path):
+def load_qry_file(file_path):
     try:
         file_format = os.path.splitext(file_path)[1].lower()
-        file_name = os.path.splitext(os.path.basename(file_path))[0]
+        file_name = os.path.basename(file_path)
 
         output = []
         if file_format == '.mzml':
@@ -111,7 +110,12 @@ def process_file(file_path):
         elif file_format == '.mzxml':
             reader = mzxml.MzXML(file_path)
             output = process_mzxml(reader, file_name)
-        return output
+        elif file_format == '.mgf':
+            reader = mgf.MGF(file_path)
+            output = process_mgf(reader, file_name)
+        else:
+            print(f"Unsupported file format: {file_format}")
+            return []
     except:
         return []
 
@@ -120,41 +124,51 @@ def process_mzml(reader, file_name):
     output = []
     for spectrum in reader:
         if spectrum['ms level'] == 2:  # MS2 scans only
-            precursor_mz = round(float(
-                spectrum['precursorList']['precursor'][0]['selectedIonList']['selectedIon'][0]['selected ion m/z']), 4)
+            precursor_mz = float(spectrum['precursorList']['precursor'][0]['selectedIonList']['selectedIon'][0]['selected ion m/z'])
 
             mz_array = np.array(spectrum['m/z array'])
             intensity_array = np.array(spectrum['intensity array'])
 
+            # remove empty peaks
+            if mz_array.size == 0:
+                continue
+
             peaks = np.column_stack((mz_array, intensity_array))
+            tic = round(np.sum(intensity_array))
 
-            # sort by mz
-            peaks = peaks[peaks[:, 0].argsort()]
-
-            # normalize intensity, avoiding division by zero
-            if peaks.size > 0:
-                max_intensity = np.max(peaks[:, 1])
-                if max_intensity > 0:
-                    peaks[:, 1] = peaks[:, 1] / max_intensity * 999
-                else:
-                    peaks[:, 1] = 0
+            # # sort by mz
+            # peaks = peaks[peaks[:, 0].argsort()]
 
             scan_number = spectrum['index'] + 1
+
+            try:
+                rt = float(spectrum['scanList']['scan'][0]['scan start time'])
+            except:
+                rt = 0
+
+            if 'positive scan' in spectrum:
+                polarity = 1
+            elif 'negative scan' in spectrum:
+                polarity = -1
+            else:
+                polarity = 0
+
             try:
                 charge = int(
                     spectrum['precursorList']['precursor'][0]['selectedIonList']['selectedIon'][0]['charge state'])
+
+                charge = charge * polarity
             except:
-                charge = 0
+                charge = polarity
 
-            polarity = 1 if 'positive scan' in spectrum else -1
-            charge = charge * polarity
-
-            output.append({
-                'title': f"{title_name}:{file_name}:scan:{scan_number}",
-                'pepmass': precursor_mz,
-                'charge': charge,
-                'peaks': peaks
-            })
+            output.append(
+                Spectrum(file=file_name,
+                         scan=scan_number,
+                         precursor_mz=precursor_mz,
+                         rt=rt,
+                         charge=charge,
+                         tic=tic,
+                         peaks=peaks))
 
     return output
 
@@ -163,43 +177,108 @@ def process_mzxml(reader, file_name):
     output = []
     for spectrum in reader:
         if spectrum['msLevel'] == 2:  # MS2 scans only
-            precursor_mz = round(float(spectrum['precursorMz'][0]['precursorMz']), 4)
+            precursor_mz = float(spectrum['precursorMz'][0]['precursorMz'])
 
             mz_array = np.array(spectrum['m/z array'])
             intensity_array = np.array(spectrum['intensity array'])
 
+            # remove empty peaks
+            if mz_array.size == 0:
+                continue
+
             peaks = np.column_stack((mz_array, intensity_array))
-            # sort by mz
-            peaks = peaks[peaks[:, 0].argsort()]
-            # normalize intensity, avoiding division by zero
-            if peaks.size > 0:
-                max_intensity = np.max(peaks[:, 1])
-                if max_intensity > 0:
-                    peaks[:, 1] = peaks[:, 1] / max_intensity * 999
-                else:
-                    peaks[:, 1] = 0
+            tic = round(np.sum(intensity_array))
+
+            # # sort by mz
+            # peaks = peaks[peaks[:, 0].argsort()]
 
             scan_number = spectrum['num']
 
-            if spectrum['polarity'] == '+':
-                polarity = 1
-            elif spectrum['polarity'] == '-':
-                polarity = -1
-            else:
+            try:
+                rt = float(spectrum['retentionTime'])
+            except:
+                rt = 0
+
+            try:
+                if spectrum['polarity'] == '+':
+                    polarity = 1
+                elif spectrum['polarity'] == '-':
+                    polarity = -1
+                else:
+                    polarity = 0
+            except:
                 polarity = 0
 
             try:
                 charge = int(spectrum['precursorMz'][0]['precursorCharge'])
+                charge = charge * polarity
             except:
-                charge = 0
+                charge = polarity
 
-            charge = charge * polarity
-
-            output.append({
-                'title': f"{title_name}:{file_name}:scan:{scan_number}",
-                'pepmass': precursor_mz,
-                'charge': charge_str,
-                'peaks': peaks
-            })
+            output.append(
+                Spectrum(file=file_name,
+                         scan=scan_number,
+                         precursor_mz=precursor_mz,
+                         rt=rt,
+                         charge=charge,
+                         tic=tic,
+                         peaks=peaks))
 
     return output
+
+
+def process_mgf(reader, file_name):
+    output = []
+    scan_idx = 0  # 1-based index actually
+    for spectrum in reader:
+        scan_idx += 1
+
+        d = spectrum['params']
+
+        try:
+            if 'precursor_mz' not in d:
+                precursor_mz = float(d['pepmass'][0])
+            else:
+                precursor_mz = float(d['precursor_mz'])
+        except:
+            continue
+
+        mz_array = np.array(spectrum['m/z array'])
+        intensity_array = np.array(spectrum['intensity array'])
+
+        if mz_array.size == 0:
+            continue
+
+        peaks = np.column_stack((mz_array, intensity_array))
+        tic = round(np.sum(intensity_array))
+
+        # sort by mz
+        peaks = peaks[peaks[:, 0].argsort()]
+
+        if 'rtinseconds' in d:
+            rt = float(d['rtinseconds'])
+        elif 'rt' in d:
+            rt = float(d['rt'])
+        else:
+            rt = 0
+
+        try:
+            charge = int(d['charge'][0])
+        except:
+            charge = 0
+
+        output.append(
+            Spectrum(file=file_name,
+                     scan=scan_idx,
+                     precursor_mz=precursor_mz,
+                     rt=rt,
+                     charge=charge,
+                     tic=tic,
+                     peaks=peaks))
+
+    return output
+
+
+if __name__ == "__main__":
+    # load_qry_file('/Users/shipei/Documents/test_data/mzXML/1002.D_GE7_01_4308.mzXML')
+    load_qry_file('/Users/shipei/Documents/test_data/mgf/CASMI.mgf')
