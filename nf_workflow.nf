@@ -257,6 +257,15 @@ workflow {
 
         merged_results = mergeResults(formatted_results.collect())
     }
+    else if (params.searchtool == "gnps_new"){
+        // absolute paths
+        spectra = spectra.map { it -> file(params.inputspectra + '/' + it) }
+        search_results = searchDataBlink(libraries_ch, spectra)
+
+        formatted_results = formatBlinkResults(search_results)
+
+        merged_results = mergeResults(formatted_results.collect())
+    }
 
     annotation_results_ch = librarygetGNPSAnnotations(merged_results, library_summary_merged_ch)
 
