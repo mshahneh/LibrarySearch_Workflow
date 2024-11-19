@@ -117,8 +117,12 @@ def main(gnps_lib_mgf, qry_file,
     match_df = pd.DataFrame(all_match_rows)
 
     lib_mgf_basename = os.path.splitext(os.path.basename(gnps_lib_mgf))[0]
-    qry_basename = os.path.basename(qry_file)  # keep the extension, avoid conflicts
-    match_df.to_csv(f"{qry_basename}_{lib_mgf_basename}_matches.tsv", sep='\t', index=False)
+    qry_basename = os.path.basename(qry_file).replace("/", "_").replace(".", "_").replace(" ", "_")  # keep the extension, avoid conflicts
+    out_name = f"{qry_basename}_{lib_mgf_basename}_matches.tsv"
+
+    out_path = os.path.join('search_results', out_name)
+
+    match_df.to_csv(out_path, sep='\t', index=False)
 
     return
 
