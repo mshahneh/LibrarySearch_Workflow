@@ -41,7 +41,7 @@ def main(gnps_lib_mgf, qry_file,
     for spec in iterate_gnps_lib_mgf(gnps_lib_mgf):
         ref_prec_mz = spec['PEPMASS']
 
-        if len(spec['peaks']) == 0:
+        if len(spec['peaks']) < min_matched_peak:
             continue
 
         # find all qry spectra within precursor tolerance
@@ -50,28 +50,32 @@ def main(gnps_lib_mgf, qry_file,
             continue
 
         # clean reference peaks
-        ref_peaks = clean_peaks(np.array(spec['peaks']), ref_prec_mz,
+        ref_peaks = clean_peaks(np.asarray(spec['peaks'], dtype=np.float32), ref_prec_mz,
                                 rel_int_threshold=rel_int_threshold,
                                 prec_mz_removal_da=prec_mz_removal_da,
                                 peak_transformation=peak_transformation)
+        if len(ref_peaks) < min_matched_peak:
+            continue
 
         # iterate over all matching query spectra
         for qry_idx in qry_idx_list:
             qry_spec = qry_spec_list[qry_idx]
 
-            if len(qry_spec.peaks) == 0:
+            if len(qry_spec.peaks) < min_matched_peak:
                 continue
 
             # check if it has cleaned peaks
             if qry_spec.cleaned_peaks is None:
-                qry_spec.cleaned_peaks = clean_peaks(qry_spec.peaks, qry_spec.precursor_mz,
+                qry_spec.cleaned_peaks = clean_peaks(np.asarray(qry_spec.peaks, dtype=np.float32), qry_spec.precursor_mz,
                                                      rel_int_threshold=rel_int_threshold,
                                                      prec_mz_removal_da=prec_mz_removal_da,
                                                      peak_transformation=peak_transformation)
+            if len(qry_spec.cleaned_peaks) < min_matched_peak:
+                continue
 
             # calculate similarity score
             # qry comes first, ref comes second (reverse search matters)
-            score, n_matches = search_eng.pair(qry_spec, ref_peaks)
+            score, n_matches = search_eng.pair(qry_spec.cleaned_peaks, ref_peaks)
 
             # filter by minimum score and minimum matched peaks
             if score < min_score or n_matches < min_matched_peak:
@@ -113,6 +117,10 @@ def main(gnps_lib_mgf, qry_file,
                 'ExactMass': '',
                 'LibrarySpectrumID': spec['SPECTRUMID']
             })
+
+    # save the results if any
+    if len(all_match_rows) == 0:
+        return
 
     match_df = pd.DataFrame(all_match_rows)
 

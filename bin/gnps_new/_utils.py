@@ -42,20 +42,28 @@ def clean_peaks(peaks, prec_mz,
     """
     Clean MS/MS peaks
     """
+
+    # Ensure peaks are 2D
+    if peaks.ndim == 1:
+        peaks = peaks.reshape(-1, 2)
+
     peaks = peaks[np.bitwise_and(peaks[:, 0] > 0, peaks[:, 1] > 0)]
+
+    if peaks.size == 0:
+        return np.zeros((0, 2), dtype=np.float32)
 
     # Remove low intensity peaks
     peaks = peaks[peaks[:, 1] > rel_int_threshold * np.max(peaks[:, 1])]
 
     if peaks.size == 0:
-        return None
+        return np.zeros((0, 2), dtype=np.float32)
 
     # Remove peaks with mz > prec_mz - prec_mz_removal_da
     max_allowed_mz = prec_mz - prec_mz_removal_da
     peaks = peaks[peaks[:, 0] < max_allowed_mz]
 
     if peaks.size == 0:
-        return None
+        return np.zeros((0, 2), dtype=np.float32)
 
     # Transform peak intensities
     if peak_transformation is not None:
@@ -63,3 +71,4 @@ def clean_peaks(peaks, prec_mz,
             peaks[:, 1] = np.sqrt(peaks[:, 1])
 
     return peaks
+

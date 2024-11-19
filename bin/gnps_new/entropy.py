@@ -30,7 +30,9 @@ from typing import Tuple
 def find_matches(spec1_mz: np.ndarray, spec2_mz: np.ndarray,
                  tolerance: float, shift: float = 0.0) -> np.ndarray:
     """Find matching peaks between two spectra."""
-    matches = []
+    max_matches = min(len(spec1_mz), len(spec2_mz))
+    matches = np.zeros((max_matches, 2), dtype=np.int32)
+    match_count = 0
     lowest_idx = 0
 
     for peak1_idx in range(len(spec1_mz)):
@@ -45,9 +47,11 @@ def find_matches(spec1_mz: np.ndarray, spec2_mz: np.ndarray,
             if mz2 < low_bound:
                 lowest_idx = peak2_idx
             else:
-                matches.append((peak1_idx, peak2_idx))
+                matches[match_count, 0] = peak1_idx
+                matches[match_count, 1] = peak2_idx
+                match_count += 1
 
-    return np.array(matches, dtype=np.int32)
+    return matches[:match_count]
 
 
 @nb.njit
@@ -55,8 +59,16 @@ def collect_peak_pairs(spec1: np.ndarray, spec2: np.ndarray,
                        tolerance: float, mz_power: float,
                        intensity_power: float, shift: float = 0.0) -> np.ndarray:
     """Find and score matching peak pairs between spectra."""
+
+    if len(spec1) == 0 or len(spec2) == 0:
+        return np.zeros((0, 4), dtype=np.float32)
+
+    # Extract m/z values
+    spec1_mz = spec1[:, 0].copy()  # Create copy to ensure contiguous array
+    spec2_mz = spec2[:, 0].copy()  # Create copy to ensure contiguous array
+
     # Find matching indices
-    matches = find_matches(spec1[:, 0], spec2[:, 0], tolerance, shift)
+    matches = find_matches(spec1_mz, spec2_mz, tolerance, shift)
     if len(matches) == 0:
         return np.zeros((0, 4), dtype=np.float32)
 
@@ -72,7 +84,7 @@ def collect_peak_pairs(spec1: np.ndarray, spec2: np.ndarray,
                              power_prod_spec2]
 
     # Sort by score descending
-    sort_idx = np.argsort(matching_pairs[:, 2])[::-1]
+    sort_idx = np.argsort(-matching_pairs[:, 2])  # Negative for descending order
     return matching_pairs[sort_idx]
 
 
@@ -92,8 +104,8 @@ def score_matches(matching_pairs: np.ndarray, spec1: np.ndarray,
     spec2 = apply_weight_to_intensity(spec2)
 
     used_matches = 0
-    used1 = np.zeros(len(spec1), dtype=np.bool_)
-    used2 = np.zeros(len(spec2), dtype=np.bool_)
+    used1 = np.zeros(len(spec1), dtype=nb.boolean)
+    used2 = np.zeros(len(spec2), dtype=nb.boolean)
 
     # Initialize arrays for matched intensities
     matched_a_intensities = np.zeros(len(matching_pairs), dtype=np.float32)
@@ -128,8 +140,8 @@ def score_matches(matching_pairs: np.ndarray, spec1: np.ndarray,
     if sum_a <= 0 or sum_b <= 0:
         return 0.0, used_matches
 
-    matched_a_intensities /= sum_a
-    matched_b_intensities /= sum_b
+    matched_a_intensities = matched_a_intensities / sum_a
+    matched_b_intensities = matched_b_intensities / sum_b
 
     # Calculate entropy similarity
     peak_ab_intensities = matched_a_intensities + matched_b_intensities
@@ -154,52 +166,7 @@ def score_matches(matching_pairs: np.ndarray, spec1: np.ndarray,
         entropy_sim += ab_term - a_term - b_term
 
     entropy_sim /= 2
-    return float(entropy_sim), used_matches
-
-
-class EntropyGreedy:
-    """Calculate entropy similarity between mass spectra."""
-
-    def __init__(self, tolerance: float = 0.1, mz_power: float = 0.0,
-                 intensity_power: float = 1.0, reverse: bool = False):
-        """
-        Parameters
-        ----------
-        tolerance: float
-            Maximum m/z difference for matching peaks
-        mz_power: float
-            Power to raise m/z values to
-        intensity_power: float
-            Power to raise intensities to
-        reverse: bool
-            If True, use reverse cosine mode where normalization is only done
-            with peaks that match in the second spectrum
-        """
-        self.tolerance = np.float32(tolerance)
-        self.mz_power = np.float32(mz_power)
-        self.intensity_power = np.float32(intensity_power)
-        self.reverse = reverse
-
-    def pair(self, spectrum1, spectrum2) -> Tuple[float, int]:
-        """Calculate similarity between two spectra.
-
-        spectrum1: Spectrum
-            Query spectrum
-        spectrum2: Spectrum
-            Reference spectrum
-        """
-        query, reference = spectrum1, spectrum2
-
-        matching_pairs = collect_peak_pairs(
-            reference.peaks, query.peaks,
-            self.tolerance, self.mz_power,
-            self.intensity_power
-        )
-
-        return score_matches(
-            matching_pairs, reference.peaks, query.peaks,
-            self.mz_power, self.intensity_power, self.reverse
-        )
+    return min(float(entropy_sim), 1.0), used_matches
 
 
 @nb.njit
@@ -207,7 +174,7 @@ def apply_weight_to_intensity(peaks: np.ndarray) -> np.ndarray:
     """
     Apply a weight to the intensity of a spectrum based on spectral entropy.
     """
-    if peaks.shape[0] == 0:
+    if peaks.size == 0:
         return np.empty((0, 2), dtype=np.float32)
 
     # normalize intensity
@@ -235,18 +202,62 @@ def apply_weight_to_intensity(peaks: np.ndarray) -> np.ndarray:
     return weighted_peaks
 
 
-if __name__ == "__main__":
-    from _utils import Spectrum
-    # Example usage with the simplified Spectrum class
-    spectrum_1 = Spectrum(
-        'test', 0, 500.0, 0.0, 1, 1000,
-        peaks=np.array([[69, 8.0], [86, 100.0], [99, 50.0]], dtype=np.float32)
-    )
+class EntropyGreedy:
+    """Calculate entropy similarity between mass spectra."""
 
-    spectrum_2 = Spectrum(
-        'test', 0, 500.0, 0.0, 1, 1000,
-        peaks=np.array([[41, 38.0], [69, 66.0], [86, 999.0]], dtype=np.float32)
-    )
+    def __init__(self, tolerance: float = 0.1, mz_power: float = 0.0,
+                 intensity_power: float = 1.0, reverse: bool = False):
+        """Initialize with given parameters."""
+        self.tolerance = np.float32(tolerance)
+        self.mz_power = np.float32(mz_power)
+        self.intensity_power = np.float32(intensity_power)
+        self.reverse = reverse
+
+    def pair(self, spectrum1, spectrum2) -> Tuple[float, int]:
+        """
+        Calculate similarity between two spectra.
+
+        spectrum1: Spectrum
+            Query spectrum
+        spectrum2: Spectrum
+            Reference spectrum
+        """
+        # Handle empty inputs
+        if spectrum1 is None or spectrum2 is None:
+            return 0.0, 0
+
+        try:
+            spectrum1 = np.asarray(spectrum1, dtype=np.float32)
+            spectrum2 = np.asarray(spectrum2, dtype=np.float32)
+
+            if spectrum1.size == 0 or spectrum2.size == 0:
+                return 0.0, 0
+
+            if spectrum1.ndim == 1:
+                spectrum1 = spectrum1.reshape(-1, 2)
+            if spectrum2.ndim == 1:
+                spectrum2 = spectrum2.reshape(-1, 2)
+        except:
+            return 0.0, 0
+
+        query, reference = spectrum1, spectrum2
+
+        matching_pairs = collect_peak_pairs(
+            reference, query,
+            self.tolerance, self.mz_power,
+            self.intensity_power
+        )
+
+        return score_matches(
+            matching_pairs, reference, query,
+            self.mz_power, self.intensity_power, self.reverse
+        )
+
+
+if __name__ == "__main__":
+    spectrum_1 = np.array([[69, 8.0], [86, 100.0], [99, 50.0]], dtype=np.float32)
+
+    spectrum_2 = np.array([[41, 38.0], [69, 66.0], [86, 999.0]], dtype=np.float32)
 
     # Example with reverse=False (forward entropy)
     entropy_standard = EntropyGreedy(tolerance=0.05, reverse=False)
@@ -257,4 +268,3 @@ if __name__ == "__main__":
     entropy_reverse = EntropyGreedy(tolerance=0.05, reverse=True)
     score_reverse, n_matches_reverse = entropy_reverse.pair(spectrum_1, spectrum_2)
     print(f"Reverse Score: {score_reverse:.3f}, Matches: {n_matches_reverse}")
-

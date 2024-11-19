@@ -34,7 +34,6 @@ params.rel_int_threshold = 0.01
 params.prec_mz_removal_da = 1.5
 params.peak_transformation = 'sqrt'
 
-
 // Blink Parameters
 params.blink_ionization = "positive"
 params.blink_minpredict = 0.01
@@ -91,8 +90,8 @@ process searchDataGNPSNew{
     mkdir -p search_results
 
     python $TOOL_FOLDER/gnps_new/main_search.py \
-        "$input_library" \
-        "$input_spectrum" \
+        --gnps_lib_mgf "$input_library" \
+        --qry_file "$input_spectrum" \
         --algorithm $params.search_algorithm \
         --pm_tol $params.pm_tolerance \
         --frag_tol "$params.fragment_tolerance" \
