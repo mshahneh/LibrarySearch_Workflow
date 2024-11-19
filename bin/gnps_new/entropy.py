@@ -1,7 +1,10 @@
 """
-This file contains code modified from the matchms project
+This file contains code modified from the matchms project and MSEntropy project
 (https://github.com/matchms/matchms)
 Copyright matchms Team 2020
+
+(https://github.com/YuanyueLi/MSEntropy)
+Copyright Yuanyue Li 2023
 
 Modified by Shipei Xing in 2024
 
@@ -236,10 +239,12 @@ if __name__ == "__main__":
     from _utils import Spectrum
     # Example usage with the simplified Spectrum class
     spectrum_1 = Spectrum(
+        'test', 0, 500.0, 0.0, 1, 1000,
         peaks=np.array([[69, 8.0], [86, 100.0], [99, 50.0]], dtype=np.float32)
     )
 
     spectrum_2 = Spectrum(
+        'test', 0, 500.0, 0.0, 1, 1000,
         peaks=np.array([[41, 38.0], [69, 66.0], [86, 999.0]], dtype=np.float32)
     )
 

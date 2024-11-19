@@ -175,6 +175,7 @@ if __name__ == "__main__":
     from _utils import Spectrum
     # Example usage with the simplified Spectrum class
     spectrum_1 = Spectrum(
+        'test', 0, 500.0, 0.0, 1, 1000,
         peaks=np.array([
             [100., 0.7],
             [150., 0.2],
@@ -184,6 +185,7 @@ if __name__ == "__main__":
     )
 
     spectrum_2 = Spectrum(
+        'test', 1, 500.0, 0.0, 1, 1000,
         peaks=np.array([
             [105., 0.4],
             [150., 0.2],

@@ -1,7 +1,7 @@
 import os
 from pyteomics import mzml, mzxml, mgf
 import numpy as np
-from _utils import Spectrum
+from ._utils import Spectrum
 
 
 def read_mgf_spectrum(file_obj):
@@ -103,24 +103,26 @@ def load_qry_file(file_path):
         file_format = os.path.splitext(file_path)[1].lower()
         file_name = os.path.basename(file_path)
 
-        output = []
         if file_format == '.mzml':
             reader = mzml.MzML(file_path)
-            output = process_mzml(reader, file_name)
+            output, all_prec_mz_array = process_mzml(reader, file_name)
         elif file_format == '.mzxml':
             reader = mzxml.MzXML(file_path)
-            output = process_mzxml(reader, file_name)
+            output, all_prec_mz_array = process_mzxml(reader, file_name)
         elif file_format == '.mgf':
             reader = mgf.MGF(file_path)
-            output = process_mgf(reader, file_name)
+            output, all_prec_mz_array = process_mgf(reader, file_name)
         else:
             print(f"Unsupported file format: {file_format}")
-            return []
+            return [], np.array([])
     except:
-        return []
+        return [], np.array([])
+
+    return output, all_prec_mz_array
 
 
 def process_mzml(reader, file_name):
+    all_prec_mz_array = []
     output = []
     for spectrum in reader:
         if spectrum['ms level'] == 2:  # MS2 scans only
@@ -135,9 +137,6 @@ def process_mzml(reader, file_name):
 
             peaks = np.column_stack((mz_array, intensity_array))
             tic = round(np.sum(intensity_array))
-
-            # # sort by mz
-            # peaks = peaks[peaks[:, 0].argsort()]
 
             scan_number = spectrum['index'] + 1
 
@@ -169,11 +168,13 @@ def process_mzml(reader, file_name):
                          charge=charge,
                          tic=tic,
                          peaks=peaks))
+            all_prec_mz_array.append(precursor_mz)
 
-    return output
+    return output, np.array(all_prec_mz_array)
 
 
 def process_mzxml(reader, file_name):
+    all_prec_mz_array = []
     output = []
     for spectrum in reader:
         if spectrum['msLevel'] == 2:  # MS2 scans only
@@ -188,9 +189,6 @@ def process_mzxml(reader, file_name):
 
             peaks = np.column_stack((mz_array, intensity_array))
             tic = round(np.sum(intensity_array))
-
-            # # sort by mz
-            # peaks = peaks[peaks[:, 0].argsort()]
 
             scan_number = spectrum['num']
 
@@ -223,11 +221,13 @@ def process_mzxml(reader, file_name):
                          charge=charge,
                          tic=tic,
                          peaks=peaks))
+            all_prec_mz_array.append(precursor_mz)
 
-    return output
+    return output, np.array(all_prec_mz_array)
 
 
 def process_mgf(reader, file_name):
+    all_prec_mz_array = []
     output = []
     scan_idx = 0  # 1-based index actually
     for spectrum in reader:
@@ -252,9 +252,6 @@ def process_mgf(reader, file_name):
         peaks = np.column_stack((mz_array, intensity_array))
         tic = round(np.sum(intensity_array))
 
-        # sort by mz
-        peaks = peaks[peaks[:, 0].argsort()]
-
         if 'rtinseconds' in d:
             rt = float(d['rtinseconds'])
         elif 'rt' in d:
@@ -275,10 +272,15 @@ def process_mgf(reader, file_name):
                      charge=charge,
                      tic=tic,
                      peaks=peaks))
+        all_prec_mz_array.append(precursor_mz)
 
-    return output
+    return output, np.array(all_prec_mz_array)
 
 
 if __name__ == "__main__":
     # load_qry_file('/Users/shipei/Documents/test_data/mzXML/1002.D_GE7_01_4308.mzXML')
-    load_qry_file('/Users/shipei/Documents/test_data/mgf/CASMI.mgf')
+    # load_qry_file('/Users/shipei/Documents/test_data/mgf/CASMI.mgf')
+
+    for spec in iterate_gnps_lib_mgf('/Users/shipei/Documents/test_data/mgf/CASMI.mgf'):
+        print(spec)
+        break

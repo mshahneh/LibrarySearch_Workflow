@@ -59,10 +59,10 @@ parameterlist:
       formvalue: "0.5"
       tooltip: "fragment_tolerance"
 
-    - displayname: Library Minimum Cosine
+    - displayname: Library Minimum Similarity
       paramtype: text
       nf_paramname: library_min_cosine
-      formplaceholder: Enter the library_min_cosine
+      formplaceholder: Enter the library minimum similarity score
       formvalue: "0.7"
 
     - displayname: Library Minimum Matched Peaks
@@ -81,6 +81,7 @@ parameterlist:
           display: "No"
         - value: "1"
           display: "Yes"
+      tooltip: "Analog search, not yet implemented for gnps_new"
 
     - displayname: Top-K
       paramtype: text

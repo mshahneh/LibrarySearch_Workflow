@@ -28,6 +28,13 @@ params.filter_window = 1
 params.analog_search = "0"
 params.analog_max_shift = 1999
 
+// GNPS_New Parameters
+params.search_algorithm = "cos"
+params.rel_int_threshold = 0.01
+params.prec_mz_removal_da = 1.5
+params.peak_transformation = 'sqrt'
+
+
 // Blink Parameters
 params.blink_ionization = "positive"
 params.blink_minpredict = 0.01
@@ -63,6 +70,38 @@ process searchDataGNPS {
         --library_min_matched_peaks $params.library_min_matched_peaks \
         --analog_search "$params.analog_search" \
         --full_relative_query_path "$full_path"
+    """
+}
+
+process searchDataGNPSNew{
+
+    //publishDir "./nf_output", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env_gnps_new.yml"
+
+    //cache 'lenient'
+
+    input:
+    each file(input_library)
+    each file(input_spectrum)
+
+    output:
+    file 'search_results/*' optional true
+
+    """
+    mkdir -p search_results
+
+    python $TOOL_FOLDER/gnps_new/main_search.py \
+        "$input_library" \
+        "$input_spectrum" \
+        --algorithm $params.search_algorithm \
+        --pm_tol $params.pm_tolerance \
+        --frag_tol "$params.fragment_tolerance" \
+        --min_score $params.library_min_cosine \
+        --min_matched_peak $params.library_min_matched_peaks \
+        --rel_int_threshold $params.rel_int_threshold \
+        --prec_mz_removal_da $params.prec_mz_removal_da \
+        --peak_transformation $params.peak_transformation
     """
 }
 
@@ -260,11 +299,9 @@ workflow {
     else if (params.searchtool == "gnps_new"){
         // absolute paths
         spectra = spectra.map { it -> file(params.inputspectra + '/' + it) }
-        search_results = searchDataBlink(libraries_ch, spectra)
+        search_results = searchDataGNPSNew(libraries_ch, spectra)
 
-        formatted_results = formatBlinkResults(search_results)
-
-        merged_results = mergeResults(formatted_results.collect())
+        merged_results = mergeResults(search_results.collect())
     }
 
     annotation_results_ch = librarygetGNPSAnnotations(merged_results, library_summary_merged_ch)
