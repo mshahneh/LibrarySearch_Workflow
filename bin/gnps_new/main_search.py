@@ -2,10 +2,10 @@ import os
 import argparse
 import pandas as pd
 import numpy as np
-from .file_io import iterate_gnps_lib_mgf, load_qry_file
-from ._utils import clean_peaks
-from .cosine import CosineGreedy
-from .entropy import EntropyGreedy
+from file_io import iterate_gnps_lib_mgf, load_qry_file
+from _utils import clean_peaks
+from cosine import CosineGreedy
+from entropy import EntropyGreedy
 
 
 def main(gnps_lib_mgf, qry_file,

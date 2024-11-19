@@ -101,7 +101,7 @@ parameterlist:
           display: "Yes"
 
 
-    - displayname: GNPS-New Parameters (Similarity tool is gnps_new)
+    - displayname: gnps_new Parameters
       paramtype: section
 
     - displayname: Searching Algorithm

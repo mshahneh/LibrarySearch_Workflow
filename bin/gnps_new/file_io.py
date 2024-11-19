@@ -1,7 +1,7 @@
 import os
 from pyteomics import mzml, mzxml, mgf
 import numpy as np
-from ._utils import Spectrum
+from _utils import Spectrum
 
 
 def read_mgf_spectrum(file_obj):

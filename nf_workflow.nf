@@ -82,8 +82,7 @@ process searchDataGNPSNew{
     //cache 'lenient'
 
     input:
-    each file(input_library)
-    each file(input_spectrum)
+    tuple file(input_library), file(input_spectrum)
 
     output:
     file 'search_results/*' optional true
@@ -264,7 +263,6 @@ process summaryLibrary {
 
 workflow {
     libraries_ch = Channel.fromPath(params.inputlibraries + "/*.mgf" )
-    spectra = Channel.fromPath(params.inputspectra + "/**", relative: true)
 
     // Lets create a summary for the library files
     library_summary_ch = summaryLibrary(libraries_ch)
@@ -273,6 +271,8 @@ workflow {
     library_summary_merged_ch = library_summary_ch.collectFile(name: "library_summary.tsv", keepHeader: true)
     
     if(params.searchtool == "gnps"){
+        spectra = Channel.fromPath(params.inputspectra + "/**", relative: true)
+
         // Perform cartesian product producing all combinations of library, spectra
         inputs = libraries_ch.combine(spectra)
 
@@ -288,6 +288,8 @@ workflow {
         merged_results = mergeResults(chunked_results.collect())
     }
     else if (params.searchtool == "blink"){
+        spectra = Channel.fromPath(params.inputspectra + "/**", relative: true)
+
         // Must add the prepend manually since relative does not inlcude the glob.
         spectra = spectra.map { it -> file(params.inputspectra + '/' + it) }
         search_results = searchDataBlink(libraries_ch, spectra)
@@ -297,9 +299,12 @@ workflow {
         merged_results = mergeResults(formatted_results.collect())
     }
     else if (params.searchtool == "gnps_new"){
-        // absolute paths
-        spectra = spectra.map { it -> file(params.inputspectra + '/' + it) }
-        search_results = searchDataGNPSNew(libraries_ch, spectra)
+        spectra_abs = Channel.fromPath(params.inputspectra + "/**", relative: false)
+
+        // Perform cartesian product producing all combinations of library, spectra
+        inputs = libraries_ch.combine(spectra_abs)
+
+        search_results = searchDataGNPSNew(inputs)
 
         merged_results = mergeResults(search_results.collect())
     }
