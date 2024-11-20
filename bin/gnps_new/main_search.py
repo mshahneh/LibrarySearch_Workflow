@@ -2,7 +2,7 @@ import os
 import argparse
 import pandas as pd
 import numpy as np
-from file_io import iterate_gnps_lib_mgf, load_qry_file
+from file_io import is_mgf_empty, iterate_gnps_lib_mgf, load_qry_file
 from _utils import clean_peaks
 from cosine import CosineGreedy
 from entropy import EntropyGreedy
@@ -21,6 +21,10 @@ def main(gnps_lib_mgf, qry_file,
     peak_transformation: str. 'sqrt' or 'none'
     """
 
+    # check if the reference library is empty
+    if is_mgf_empty(gnps_lib_mgf):
+        return
+
     if algorithm == 'cos':
         search_eng = CosineGreedy(tolerance=frag_tol, reverse=False)
     elif algorithm == 'rev_cos':
@@ -34,6 +38,11 @@ def main(gnps_lib_mgf, qry_file,
 
     # load query file as a list of Spectrum objects
     qry_spec_list, all_qry_prec_mz_array = load_qry_file(qry_file)
+    qry_file_name = os.path.basename(qry_file)
+
+    # if the query file is empty, return
+    if len(qry_spec_list) == 0:
+        return
 
     all_match_rows = []  # store all matched rows
 
@@ -41,7 +50,7 @@ def main(gnps_lib_mgf, qry_file,
     for spec in iterate_gnps_lib_mgf(gnps_lib_mgf):
         ref_prec_mz = spec['PEPMASS']
 
-        if len(spec['peaks']) < min_matched_peak:
+        if len(spec['peaks']) < max(min_matched_peak, 1):
             continue
 
         # find all qry spectra within precursor tolerance
@@ -50,27 +59,29 @@ def main(gnps_lib_mgf, qry_file,
             continue
 
         # clean reference peaks
-        ref_peaks = clean_peaks(np.asarray(spec['peaks'], dtype=np.float32), ref_prec_mz,
+        ref_peaks = clean_peaks(np.asarray(spec['peaks'], dtype=np.float32),
+                                ref_prec_mz,
                                 rel_int_threshold=rel_int_threshold,
                                 prec_mz_removal_da=prec_mz_removal_da,
                                 peak_transformation=peak_transformation)
-        if len(ref_peaks) < min_matched_peak:
+        if len(ref_peaks) < max(min_matched_peak, 1):
             continue
 
         # iterate over all matching query spectra
         for qry_idx in qry_idx_list:
             qry_spec = qry_spec_list[qry_idx]
 
-            if len(qry_spec.peaks) < min_matched_peak:
+            if len(qry_spec.peaks) < max(min_matched_peak, 1):
                 continue
 
             # check if it has cleaned peaks
             if qry_spec.cleaned_peaks is None:
-                qry_spec.cleaned_peaks = clean_peaks(np.asarray(qry_spec.peaks, dtype=np.float32), qry_spec.precursor_mz,
+                qry_spec.cleaned_peaks = clean_peaks(np.asarray(qry_spec.peaks, dtype=np.float32),
+                                                     qry_spec.precursor_mz,
                                                      rel_int_threshold=rel_int_threshold,
                                                      prec_mz_removal_da=prec_mz_removal_da,
                                                      peak_transformation=peak_transformation)
-            if len(qry_spec.cleaned_peaks) < min_matched_peak:
+            if len(qry_spec.cleaned_peaks) < max(min_matched_peak, 1):
                 continue
 
             # calculate similarity score
@@ -81,13 +92,13 @@ def main(gnps_lib_mgf, qry_file,
             if score < min_score or n_matches < min_matched_peak:
                 continue
 
-            mz_error_ppm = round((qry_spec.precursor_mz - ref_prec_mz) / ref_prec_mz * 1e6, 2)
-            mass_diff = round(qry_spec.precursor_mz - ref_prec_mz, 4)
+            mz_error_ppm = (qry_spec.precursor_mz - ref_prec_mz) / ref_prec_mz * 1e6
+            mass_diff = qry_spec.precursor_mz - ref_prec_mz
 
             # store matched rows
             all_match_rows.append({
                 '#Scan#': qry_spec.scan,
-                'SpectrumFile': qry_spec.file,
+                'SpectrumFile': qry_file_name,
                 'Annotation': '*..*',
                 'OrigAnnotation': '',
                 'Protein': '',
@@ -96,23 +107,23 @@ def main(gnps_lib_mgf, qry_file,
                 'matchOrientation': '',
                 'startMass': '',
                 'Charge': qry_spec.charge,
-                'MQScore': score,
+                'MQScore': round(score, 4),
                 'p-value': qry_spec.rt,
                 'isDecoy': 0,
                 'StrictEnvelopeScore': '',
                 'UnstrictEvelopeScore': qry_spec.tic,
                 'CompoundName': '',
                 'Organism': '',
-                'FileScanUniqueID': qry_spec.file_scan_id,
+                'FileScanUniqueID': f'{qry_file_name}_{qry_spec.scan}',
                 'FDR': -1,
                 'LibraryName': '',
-                'mzErrorPPM': mz_error_ppm,
+                'mzErrorPPM': round(mz_error_ppm, 2),
                 'LibMetaData': '',
                 'Smiles': '',
                 'Inchi': '',
                 'LibSearchSharedPeaks': n_matches,
                 'Abundance': '',
-                'ParentMassDiff': mass_diff,
+                'ParentMassDiff': round(mass_diff, 4),
                 'SpecMZ': qry_spec.precursor_mz,
                 'ExactMass': '',
                 'LibrarySpectrumID': spec['SPECTRUMID']

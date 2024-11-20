@@ -1,7 +1,22 @@
 import os
-from pyteomics import mzml, mzxml, mgf
+
 import numpy as np
+from pyteomics import mzml, mzxml, mgf
+
 from _utils import Spectrum
+
+
+def is_mgf_empty(mgf_path):
+
+    # file size
+    if os.path.getsize(mgf_path) < 100:
+        return True
+
+    try:
+        first_spectrum = next(iterate_gnps_lib_mgf(mgf_path), None)
+        return first_spectrum is None
+    except:
+        return True  # Return True if file can't be read or has invalid format
 
 
 def read_mgf_spectrum(file_obj):
@@ -80,7 +95,7 @@ def read_mgf_spectrum(file_obj):
     return None
 
 
-def iterate_gnps_lib_mgf(mgf_path, buffer_size=1048576):
+def iterate_gnps_lib_mgf(mgf_path, buffer_size=2048):
     """Iterate through spectra in an MGF file efficiently using buffered reading.
 
     Args:
@@ -101,17 +116,17 @@ def iterate_gnps_lib_mgf(mgf_path, buffer_size=1048576):
 def load_qry_file(file_path):
     try:
         file_format = os.path.splitext(file_path)[1].lower()
-        file_name = os.path.basename(file_path)
+        # file_name = os.path.basename(file_path)
 
         if file_format == '.mzml':
             reader = mzml.MzML(file_path)
-            output, all_prec_mz_array = process_mzml(reader, file_name)
+            output, all_prec_mz_array = process_mzml(reader)
         elif file_format == '.mzxml':
             reader = mzxml.MzXML(file_path)
-            output, all_prec_mz_array = process_mzxml(reader, file_name)
+            output, all_prec_mz_array = process_mzxml(reader)
         elif file_format == '.mgf':
             reader = mgf.MGF(file_path)
-            output, all_prec_mz_array = process_mgf(reader, file_name)
+            output, all_prec_mz_array = process_mgf(reader)
         else:
             print(f"Unsupported file format: {file_format}")
             return [], np.array([])
@@ -121,12 +136,13 @@ def load_qry_file(file_path):
     return output, all_prec_mz_array
 
 
-def process_mzml(reader, file_name):
+def process_mzml(reader):
     all_prec_mz_array = []
     output = []
     for spectrum in reader:
         if spectrum['ms level'] == 2:  # MS2 scans only
-            precursor_mz = float(spectrum['precursorList']['precursor'][0]['selectedIonList']['selectedIon'][0]['selected ion m/z'])
+            precursor_mz = float(
+                spectrum['precursorList']['precursor'][0]['selectedIonList']['selectedIon'][0]['selected ion m/z'])
 
             mz_array = np.array(spectrum['m/z array'])
             intensity_array = np.array(spectrum['intensity array'])
@@ -161,19 +177,19 @@ def process_mzml(reader, file_name):
                 charge = polarity
 
             output.append(
-                Spectrum(file=file_name,
-                         scan=scan_number,
-                         precursor_mz=precursor_mz,
-                         rt=rt,
-                         charge=charge,
-                         tic=tic,
-                         peaks=peaks))
+                Spectrum(
+                    scan=scan_number,
+                    precursor_mz=precursor_mz,
+                    rt=rt,
+                    charge=charge,
+                    tic=tic,
+                    peaks=peaks))
             all_prec_mz_array.append(precursor_mz)
 
     return output, np.array(all_prec_mz_array)
 
 
-def process_mzxml(reader, file_name):
+def process_mzxml(reader):
     all_prec_mz_array = []
     output = []
     for spectrum in reader:
@@ -214,19 +230,19 @@ def process_mzxml(reader, file_name):
                 charge = polarity
 
             output.append(
-                Spectrum(file=file_name,
-                         scan=scan_number,
-                         precursor_mz=precursor_mz,
-                         rt=rt,
-                         charge=charge,
-                         tic=tic,
-                         peaks=peaks))
+                Spectrum(
+                    scan=scan_number,
+                    precursor_mz=precursor_mz,
+                    rt=rt,
+                    charge=charge,
+                    tic=tic,
+                    peaks=peaks))
             all_prec_mz_array.append(precursor_mz)
 
     return output, np.array(all_prec_mz_array)
 
 
-def process_mgf(reader, file_name):
+def process_mgf(reader):
     all_prec_mz_array = []
     output = []
     scan_idx = 0  # 1-based index actually
@@ -265,22 +281,22 @@ def process_mgf(reader, file_name):
             charge = 0
 
         output.append(
-            Spectrum(file=file_name,
-                     scan=scan_idx,
-                     precursor_mz=precursor_mz,
-                     rt=rt,
-                     charge=charge,
-                     tic=tic,
-                     peaks=peaks))
+            Spectrum(
+                scan=scan_idx,
+                precursor_mz=precursor_mz,
+                rt=rt,
+                charge=charge,
+                tic=tic,
+                peaks=peaks))
         all_prec_mz_array.append(precursor_mz)
 
     return output, np.array(all_prec_mz_array)
 
 
 if __name__ == "__main__":
-    # load_qry_file('/Users/shipei/Documents/test_data/mzXML/1002.D_GE7_01_4308.mzXML')
+    load_qry_file('/Users/shipei/Documents/test_data/mzXML/Standards_p_1ugmL_glycocholic.mzXML')
     # load_qry_file('/Users/shipei/Documents/test_data/mgf/CASMI.mgf')
 
-    for spec in iterate_gnps_lib_mgf('/Users/shipei/Documents/test_data/mgf/CASMI.mgf'):
-        print(spec)
-        break
+    # for spec in iterate_gnps_lib_mgf('/Users/shipei/Documents/test_data/mgf/CASMI.mgf'):
+    #     print(spec)
+    #     break

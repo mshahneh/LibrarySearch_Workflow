@@ -8,7 +8,7 @@ class Spectrum:
     """
     A class to represent a mass spectrum with its associated metadata.
     """
-    file: str
+    # file: str
     scan: int
     precursor_mz: float
     rt: float
@@ -16,7 +16,6 @@ class Spectrum:
     tic: float
     peaks: np.ndarray
     cleaned_peaks: np.ndarray = None
-    file_scan_id: str = None
 
 
     def __post_init__(self):
@@ -29,11 +28,13 @@ class Spectrum:
         sort_idx = np.argsort(self.peaks[:, 0])
         self.peaks = self.peaks[sort_idx]
 
+        # do some roundings, reduce memory usage
+        self.precursor_mz = round(self.precursor_mz, 4)
+        self.rt = round(self.rt, 4)
+        self.tic = round(self.tic)
+
         # Ensure float32 type
         self.peaks = self.peaks.astype(np.float32)
-
-        # add file_scan_id
-        self.file_scan_id = f"{self.file}_{self.scan}"
 
 
 @njit

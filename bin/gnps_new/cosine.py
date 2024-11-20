@@ -163,43 +163,36 @@ class CosineGreedy:
         self.intensity_power = np.float32(intensity_power)
         self.reverse = reverse
 
-    def pair(self, spectrum1, spectrum2) -> Tuple[float, int]:
+    def pair(self, qry_spec, ref_spec) -> Tuple[float, int]:
         """
         Calculate similarity between two spectra.
-
-        spectrum1: Spectrum
-            Query spectrum
-        spectrum2: Spectrum
-            Reference spectrum
         """
         # Handle empty inputs
-        if spectrum1 is None or spectrum2 is None:
+        if qry_spec is None or ref_spec is None:
             return 0.0, 0
 
         try:
-            spectrum1 = np.asarray(spectrum1, dtype=np.float32)
-            spectrum2 = np.asarray(spectrum2, dtype=np.float32)
+            qry_spec = np.asarray(qry_spec, dtype=np.float32)
+            ref_spec = np.asarray(ref_spec, dtype=np.float32)
 
-            if spectrum1.size == 0 or spectrum2.size == 0:
+            if qry_spec.size == 0 or ref_spec.size == 0:
                 return 0.0, 0
 
-            if spectrum1.ndim == 1:
-                spectrum1 = spectrum1.reshape(-1, 2)
-            if spectrum2.ndim == 1:
-                spectrum2 = spectrum2.reshape(-1, 2)
+            if qry_spec.ndim == 1:
+                qry_spec = qry_spec.reshape(-1, 2)
+            if ref_spec.ndim == 1:
+                ref_spec = ref_spec.reshape(-1, 2)
         except:
             return 0.0, 0
 
-        query, reference = spectrum1, spectrum2
-
         matching_pairs = collect_peak_pairs(
-            reference, query,
+            ref_spec, qry_spec,
             self.tolerance, self.mz_power,
             self.intensity_power
         )
 
         return score_matches(
-            matching_pairs, reference, query,
+            matching_pairs, ref_spec, qry_spec,
             self.mz_power, self.intensity_power, self.reverse
         )
 
