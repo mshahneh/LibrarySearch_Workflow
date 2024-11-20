@@ -1,7 +1,7 @@
 workflowname: librarysearch_workflow
 workflowdescription: librarysearch_workflow
 workflowlongdescription: This is a library search workflow for GNPS2
-workflowversion: "2024.11.19"
+workflowversion: "2024.11.20"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -81,7 +81,6 @@ parameterlist:
           display: "No"
         - value: "1"
           display: "Yes"
-      tooltip: "Analog search, not yet implemented for gnps_new"
 
     - displayname: Top-K
       paramtype: text
@@ -122,15 +121,22 @@ parameterlist:
       paramtype: text
       nf_paramname: rel_int_threshold
       formplaceholder: Enter the relative intensity threshold for spectral cleaning (0-1)
-      formvalue: "0.0"
-      tooltip: "0.01 means 1% relative intensity threshold. Spectral cleaning is applied to both query and library spectra before similarity calculation."
+      formvalue: "0.02"
+      tooltip: "0.02 means 2% relative intensity threshold. Spectral cleaning is applied to both query and library spectra before similarity calculation."
 
     - displayname: Precursor ion removal in Da (MS/MS cleaning)
       paramtype: text
       nf_paramname: prec_mz_removal_da
       formplaceholder: Enter the precursor ion removal threshold in Da (MS/MS peaks with m/z larger than precursor m/z minus this value will be removed)
       formvalue: "1.5"
-      tooltip: "1.5 means all ions with m/z larger than precursor m/z minus 1.5 Da will be removed. Spectral cleaning is applied to both query and library spectra before similarity calculation."
+      tooltip: "All ions with m/z larger than precursor m/z minus 1.5 Da will be removed. Spectral cleaning is applied to both query and library spectra before similarity calculation."
+
+    - displayname: Top N peak number (MS/MS cleaning)
+      paramtype: text
+      nf_paramname: max_peak_num
+      formplaceholder: Enter the top N peak number (Top N peaks with highest intensities will be kept)
+      formvalue: "25"
+      tooltip: "Top 25 ions with highest intensities will be kept. Set it to -1 to disable this cleaning. Spectral cleaning is applied to both query and library spectra before similarity calculation."
 
     - displayname: Peak intensity transformation
       paramtype: select

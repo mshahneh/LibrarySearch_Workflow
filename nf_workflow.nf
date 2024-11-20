@@ -30,8 +30,9 @@ params.analog_max_shift = 1999
 
 // GNPS_New Parameters
 params.search_algorithm = "cos"
-params.rel_int_threshold = 0.0
+params.rel_int_threshold = 0.02
 params.prec_mz_removal_da = 1.5
+params.max_peak_num = 25
 params.peak_transformation = 'sqrt'
 
 // Blink Parameters
@@ -93,13 +94,16 @@ process searchDataGNPSNew{
         --gnps_lib_mgf "$input_library" \
         --qry_file "$input_spectrum" \
         --algorithm $params.search_algorithm \
+        --analog_search $params.analog_search \
+        --analog_max_shift $params.analog_max_shift \
         --pm_tol $params.pm_tolerance \
         --frag_tol $params.fragment_tolerance \
         --min_score $params.library_min_cosine \
         --min_matched_peak $params.library_min_matched_peaks \
         --rel_int_threshold $params.rel_int_threshold \
         --prec_mz_removal_da $params.prec_mz_removal_da \
-        --peak_transformation $params.peak_transformation
+        --peak_transformation $params.peak_transformation \
+        --max_peak_num $params.max_peak_num
     """
 }
 

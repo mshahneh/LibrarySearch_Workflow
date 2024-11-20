@@ -24,154 +24,126 @@ from typing import Tuple
 
 
 @nb.njit
-def find_matches(spec1_mz: np.ndarray, spec2_mz: np.ndarray,
-                 tolerance: float, shift: float = 0.0) -> np.ndarray:
+def find_matches(ref_spec_mz: np.ndarray, qry_spec_mz: np.ndarray,
+                 tolerance: float, shift: float = 0.0) -> Tuple[np.ndarray, np.ndarray]:
     """Find matching peaks between two spectra."""
-    max_matches = min(len(spec1_mz), len(spec2_mz))
-    matches = np.zeros((max_matches, 2), dtype=np.int32)
+    matches_idx1 = np.empty(min(len(ref_spec_mz), len(qry_spec_mz)), dtype=np.int32)
+    matches_idx2 = np.empty_like(matches_idx1)
     match_count = 0
     lowest_idx = 0
 
-    for peak1_idx in range(len(spec1_mz)):
-        mz = spec1_mz[peak1_idx]
+    for peak1_idx in range(len(ref_spec_mz)):
+        mz = ref_spec_mz[peak1_idx]
         low_bound = mz - tolerance
         high_bound = mz + tolerance
 
-        for peak2_idx in range(lowest_idx, len(spec2_mz)):
-            mz2 = spec2_mz[peak2_idx] + shift
+        for peak2_idx in range(lowest_idx, len(qry_spec_mz)):
+            mz2 = qry_spec_mz[peak2_idx] + shift
             if mz2 > high_bound:
                 break
             if mz2 < low_bound:
                 lowest_idx = peak2_idx
             else:
-                matches[match_count, 0] = peak1_idx
-                matches[match_count, 1] = peak2_idx
+                matches_idx1[match_count] = peak1_idx
+                matches_idx2[match_count] = peak2_idx
                 match_count += 1
 
-    return matches[:match_count]
+    return matches_idx1[:match_count], matches_idx2[:match_count]
 
 
 @nb.njit
-def collect_peak_pairs(spec1: np.ndarray, spec2: np.ndarray,
-                       tolerance: float, mz_power: float,
-                       intensity_power: float, shift: float = 0.0) -> np.ndarray:
+def collect_peak_pairs(ref_spec: np.ndarray, qry_spec: np.ndarray, min_matched_peak: int,
+                       tolerance: float, shift: float = 0.0) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Find and score matching peak pairs between spectra."""
 
-    if len(spec1) == 0 or len(spec2) == 0:
-        return np.zeros((0, 4), dtype=np.float32)
+    if len(ref_spec) == 0 or len(qry_spec) == 0:
+        return np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.float32)
 
     # Extract m/z values
-    spec1_mz = spec1[:, 0].copy()  # Create copy to ensure contiguous array
-    spec2_mz = spec2[:, 0].copy()  # Create copy to ensure contiguous array
+    matches_idx1, matches_idx2 = find_matches(ref_spec[:, 0], qry_spec[:, 0], tolerance, shift)
 
-    matches = find_matches(spec1_mz, spec2_mz, tolerance, shift)
-
-    if len(matches) == 0:
-        return np.zeros((0, 4), dtype=np.float32)
+    if len(matches_idx1) < min_matched_peak:
+        return np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.float32)
 
     # Calculate scores for matches
-    matching_pairs = np.zeros((len(matches), 4), dtype=np.float32)
-    for i in range(len(matches)):
-        idx1 = matches[i, 0]
-        idx2 = matches[i, 1]
-        power_prod_spec1 = (spec1[idx1, 0] ** mz_power) * \
-                           (spec1[idx1, 1] ** intensity_power)
-        power_prod_spec2 = (spec2[idx2, 0] ** mz_power) * \
-                           (spec2[idx2, 1] ** intensity_power)
-        matching_pairs[i, 0] = idx1
-        matching_pairs[i, 1] = idx2
-        matching_pairs[i, 2] = power_prod_spec1 * power_prod_spec2
-        matching_pairs[i, 3] = power_prod_spec2
+    scores = ref_spec[matches_idx1, 1] * qry_spec[matches_idx2, 1]
 
     # Sort by score descending
-    sort_idx = np.argsort(-matching_pairs[:, 2])  # Negative for descending order
-    return matching_pairs[sort_idx]
+    sort_idx = np.argsort(-scores)
+    return matches_idx1[sort_idx], matches_idx2[sort_idx], scores[sort_idx]
 
 
 @nb.njit
-def score_matches(matching_pairs: np.ndarray, spec1: np.ndarray,
-                  spec2: np.ndarray, mz_power: float,
-                  intensity_power: float, reverse: bool) -> Tuple[float, int]:
-    """
-    Calculate final similarity score from matching peaks.
-    spec1 is the reference spectrum, spec2 is the query spectrum.
-    """
-    if len(matching_pairs) == 0:
-        return 0.0, 0
+def score_matches(matches_idx1: np.ndarray, matches_idx2: np.ndarray,
+                  scores: np.ndarray, ref_spec: np.ndarray,
+                  qry_spec: np.ndarray, reverse: bool) -> Tuple[float, int]:
+    """Calculate final similarity score from matching peaks."""
 
-    score = 0.0
+    # Use boolean arrays for tracking used peaks - initialized to False
+    used1 = np.zeros(len(ref_spec), dtype=nb.boolean)
+    used2 = np.zeros(len(qry_spec), dtype=nb.boolean)
+
+    total_score = 0.0
     used_matches = 0
-    used1 = np.zeros(len(spec1), dtype=nb.boolean)
-    used2 = np.zeros(len(spec2), dtype=nb.boolean)
-    matched_indices = np.zeros(len(matching_pairs), dtype=np.int32)
 
     # Find best non-overlapping matches
-    for i in range(len(matching_pairs)):
-        idx1 = int(matching_pairs[i, 0])
-        idx2 = int(matching_pairs[i, 1])
+    for i in range(len(matches_idx1)):
+        idx1 = matches_idx1[i]
+        idx2 = matches_idx2[i]
         if not used1[idx1] and not used2[idx2]:
-            score += matching_pairs[i, 2]
+            total_score += scores[i]
             used1[idx1] = True
             used2[idx2] = True
-            matched_indices[used_matches] = idx2
             used_matches += 1
 
     if used_matches == 0:
         return 0.0, 0
 
-    # Create matched peaks array
-    spec2_matched = np.zeros((used_matches, 2), dtype=np.float32)
-    for i in range(used_matches):
-        spec2_matched[i, 0] = spec2[matched_indices[i], 0]
-        spec2_matched[i, 1] = spec2[matched_indices[i], 1]
-
-    # Calculate powers for normalization
-    spec1_powers = np.zeros(len(spec1), dtype=np.float32)
-    for i in range(len(spec1)):
-        spec1_powers[i] = (spec1[i, 0] ** mz_power) * \
-                          (spec1[i, 1] ** intensity_power)
+    # Calculate normalization factors
+    norm1 = np.sqrt(np.sum(ref_spec[:, 1] * ref_spec[:, 1]))
 
     if reverse:
-        spec2_powers = np.zeros(used_matches, dtype=np.float32)
-        for i in range(used_matches):
-            spec2_powers[i] = (spec2_matched[i, 0] ** mz_power) * \
-                              (spec2_matched[i, 1] ** intensity_power)
+        # Only sum intensities of matched peaks for reverse scoring
+        matched_intensities = np.zeros(used_matches, dtype=np.float32)
+        match_idx = 0
+        for i in range(len(qry_spec)):
+            if used2[i]:
+                matched_intensities[match_idx] = qry_spec[i, 1]
+                match_idx += 1
+        norm2 = np.sqrt(np.sum(matched_intensities * matched_intensities))
     else:
-        spec2_powers = np.zeros(len(spec2), dtype=np.float32)
-        for i in range(len(spec2)):
-            spec2_powers[i] = (spec2[i, 0] ** mz_power) * \
-                              (spec2[i, 1] ** intensity_power)
-
-    norm1 = np.sqrt(np.sum(spec1_powers * spec1_powers))
-    norm2 = np.sqrt(np.sum(spec2_powers * spec2_powers))
+        norm2 = np.sqrt(np.sum(qry_spec[:, 1] * qry_spec[:, 1]))
 
     if norm1 == 0.0 or norm2 == 0.0:
         return 0.0, used_matches
 
-    score = score / (norm1 * norm2)
+    score = total_score / (norm1 * norm2)
     return min(float(score), 1.0), used_matches
 
 
 class CosineGreedy:
     """Calculate cosine similarity between mass spectra."""
 
-    def __init__(self, tolerance: float = 0.1, mz_power: float = 0.0,
-                 intensity_power: float = 1.0, reverse: bool = False):
+    def __init__(self, tolerance: float = 0.1, reverse: bool = False):
         """Initialize with given parameters."""
         self.tolerance = np.float32(tolerance)
-        self.mz_power = np.float32(mz_power)
-        self.intensity_power = np.float32(intensity_power)
         self.reverse = reverse
 
-    def pair(self, qry_spec, ref_spec) -> Tuple[float, int]:
+    def pair(self, qry_spec, ref_spec,
+             min_matched_peak: int = 1,
+             analog_search: bool = False,
+             shift: float = 0.0) -> Tuple[float, int]:
         """
         Calculate similarity between two spectra.
+
+        min_matched_peak: int, help for early stopping
         """
         # Handle empty inputs
         if qry_spec is None or ref_spec is None:
             return 0.0, 0
 
         try:
+            # Convert to float32 for memory efficiency
             qry_spec = np.asarray(qry_spec, dtype=np.float32)
             ref_spec = np.asarray(ref_spec, dtype=np.float32)
 
@@ -185,15 +157,17 @@ class CosineGreedy:
         except:
             return 0.0, 0
 
-        matching_pairs = collect_peak_pairs(
-            ref_spec, qry_spec,
-            self.tolerance, self.mz_power,
-            self.intensity_power
+        matches_idx1, matches_idx2, scores = collect_peak_pairs(
+            ref_spec, qry_spec, min_matched_peak,
+            self.tolerance, shift
         )
 
+        if len(matches_idx1) == 0:
+            return 0.0, 0
+
         return score_matches(
-            matching_pairs, ref_spec, qry_spec,
-            self.mz_power, self.intensity_power, self.reverse
+            matches_idx1, matches_idx2, scores,
+            ref_spec, qry_spec, self.reverse
         )
 
 
