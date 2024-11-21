@@ -3,7 +3,7 @@ import os
 import numpy as np
 from pyteomics import mzml, mzxml, mgf
 
-from _utils import Spectrum, clean_peaks
+from _utils import Spectrum
 
 
 def iter_spectra(qry_file):

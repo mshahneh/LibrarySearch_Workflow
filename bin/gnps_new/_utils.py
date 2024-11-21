@@ -1,6 +1,7 @@
+from dataclasses import dataclass
+
 import numpy as np
 from numba import njit
-from dataclasses import dataclass
 
 
 @dataclass
@@ -15,8 +16,8 @@ class Spectrum:
     charge: int
     tic: float
     peaks: np.ndarray
-    # cleaned_peaks: np.ndarray = None
 
+    # cleaned_peaks: np.ndarray = None
 
     def __post_init__(self):
         """Validate peaks data"""
@@ -74,4 +75,3 @@ def clean_peaks(peaks, prec_mz,
         peaks[:, 1] = np.sqrt(peaks[:, 1])
 
     return peaks
-

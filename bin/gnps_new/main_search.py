@@ -156,6 +156,7 @@ def main(gnps_lib_mgf, qry_file,
     reformat_all_results(qry_file_name, out_path)
     return
 
+
 def write_batch_results(match_rows, out_path):
     """Write batch results to file"""
 

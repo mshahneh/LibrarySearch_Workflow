@@ -18,9 +18,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import numpy as np
-import numba as nb
 from typing import Tuple
+
+import numba as nb
+import numpy as np
 
 
 @nb.njit
@@ -172,19 +173,19 @@ class CosineGreedy:
 
 
 if __name__ == "__main__":
-    peaks1=np.array([
+    peaks1 = np.array([
         [100., 0.7],
         [150., 0.2],
         [200., 0.1],
         [201., 0.2]
     ], dtype=np.float32)
 
-    peaks2=np.array([
-            [105., 0.4],
-            [150., 0.2],
-            [190., 0.1],
-            [200., 0.5]
-        ], dtype=np.float32)
+    peaks2 = np.array([
+        [105., 0.4],
+        [150., 0.2],
+        [190., 0.1],
+        [200., 0.5]
+    ], dtype=np.float32)
 
     # Example with reverse=False (forward cosine)
     cosine_standard = CosineGreedy(tolerance=0.05, reverse=False)

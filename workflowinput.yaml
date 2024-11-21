@@ -131,7 +131,7 @@ parameterlist:
       formvalue: "1.5"
       tooltip: "All ions with m/z larger than precursor m/z minus 1.5 Da will be removed. Spectral cleaning is applied to both query and library spectra."
 
-    - displayname: Top N peak number (MS/MS cleaning)
+    - displayname: Top N peak (MS/MS cleaning)
       paramtype: text
       nf_paramname: max_peak_num
       formplaceholder: Enter the top N peak number (Top N peaks with the highest intensities will be kept)

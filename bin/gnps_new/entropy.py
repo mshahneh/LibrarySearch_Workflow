@@ -21,14 +21,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import numpy as np
-import numba as nb
 from typing import Tuple
+
+import numba as nb
+import numpy as np
 
 
 @nb.njit
 def find_matches(ref_spec_mz: np.ndarray, qry_spec_mz: np.ndarray,
-                tolerance: float, shift: float = 0.0) -> Tuple[np.ndarray, np.ndarray]:
+                 tolerance: float, shift: float = 0.0) -> Tuple[np.ndarray, np.ndarray]:
     """Find matching peaks between two spectra."""
     matches_idx1 = np.empty(min(len(ref_spec_mz), len(qry_spec_mz)), dtype=np.int32)
     matches_idx2 = np.empty_like(matches_idx1)
@@ -164,7 +165,7 @@ def apply_weight_to_intensity(peaks: np.ndarray) -> np.ndarray:
     # Calculate the spectral entropy
     valid_intensities = weighted_peaks[:, 1] > 0
     entropy = -np.sum(weighted_peaks[valid_intensities, 1] *
-                     np.log(weighted_peaks[valid_intensities, 1]))
+                      np.log(weighted_peaks[valid_intensities, 1]))
 
     # Apply the weight if entropy is below threshold
     if entropy < 3:
