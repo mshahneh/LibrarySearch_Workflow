@@ -570,7 +570,7 @@ def read_mgf_spectrum(file_obj):
 
                 # Handle specific numeric fields
                 if key == 'PEPMASS':
-                    spectrum[key] = float(value.split()[0])  # Handle additional intensity value
+                    spectrum['PEPMASS'] = float(value.strip())  # Handle additional intensity value
                 elif key in spectrum:  # Store other known metadata fields as strings
                     spectrum[key] = value
             except ValueError:
