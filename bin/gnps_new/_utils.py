@@ -15,6 +15,7 @@ class Spectrum:
     charge: int
     tic: float
     peaks: np.ndarray
+    peaks_cleaned: bool = False
 
     # cleaned_peaks: np.ndarray = None
 
@@ -37,10 +38,6 @@ def clean_peaks(peaks: np.ndarray,
     """
     Clean MS/MS peaks
     """
-
-    # Ensure peaks are 2D
-    if peaks.ndim == 1:
-        peaks = peaks.reshape(-1, 2)
 
     peaks = peaks[np.bitwise_and(peaks[:, 0] > 0, peaks[:, 1] > 0)]
 

@@ -22,10 +22,10 @@ def iter_spectra(qry_file):
 
                     mz_array = np.array(spectrum['m/z array'])
                     intensity_array = np.array(spectrum['intensity array'])
-                    tic = round(np.sum(intensity_array))
+                    tic = np.sum(intensity_array)
                     intensity_array = intensity_array / np.max(intensity_array) * 999  # will be converted to float32
 
-                    if mz_array.size == 0:
+                    if sum(intensity_array > 0) == 0:
                         continue
 
                     peaks = np.column_stack((mz_array, intensity_array))
@@ -64,10 +64,10 @@ def iter_spectra(qry_file):
 
                     mz_array = np.array(spectrum['m/z array'])
                     intensity_array = np.array(spectrum['intensity array'])
-                    tic = round(np.sum(intensity_array))
+                    tic = np.sum(intensity_array)
                     intensity_array = intensity_array / np.max(intensity_array) * 999  # will be converted to float32
 
-                    if mz_array.size == 0:
+                    if sum(intensity_array > 0) == 0:
                         continue
 
                     peaks = np.column_stack((mz_array, intensity_array))
@@ -107,10 +107,10 @@ def iter_spectra(qry_file):
 
                     mz_array = np.array(spectrum['m/z array'])
                     intensity_array = np.array(spectrum['intensity array'])
-                    tic = round(np.sum(intensity_array))
+                    tic = np.sum(intensity_array)
                     intensity_array = intensity_array / np.max(intensity_array) * 999  # will be converted to float32
 
-                    if mz_array.size == 0:
+                    if sum(intensity_array > 0) == 0:
                         continue
 
                     peaks = np.column_stack((mz_array, intensity_array))
@@ -132,7 +132,7 @@ def iter_spectra(qry_file):
         raise ValueError(f"Unsupported file format: {file_format}")
 
 
-def batch_process_queries(qry_file, batch_size=500):
+def batch_process_queries(qry_file, min_peak, batch_size=1000):
     """Process query spectra in batches to reduce memory usage"""
     file_format = os.path.splitext(qry_file)[1].lower()
     batch_specs = []
@@ -149,11 +149,11 @@ def batch_process_queries(qry_file, batch_size=500):
 
                         mz_array = np.array(spectrum['m/z array'])
                         intensity_array = np.array(spectrum['intensity array'])
-                        tic = round(np.sum(intensity_array))
+                        tic = np.sum(intensity_array)
                         intensity_array = intensity_array / np.max(intensity_array) * 999  # will be converted to float32
 
-                        # Skip empty peaks
-                        if mz_array.size == 0:
+                        # Skip peaks with less than min_peak peaks
+                        if sum(intensity_array > 0) < min_peak:
                             continue
 
                         peaks = np.column_stack((mz_array, intensity_array))
@@ -207,10 +207,10 @@ def batch_process_queries(qry_file, batch_size=500):
 
                         mz_array = np.array(spectrum['m/z array'])
                         intensity_array = np.array(spectrum['intensity array'])
-                        tic = round(np.sum(intensity_array))
+                        tic = np.sum(intensity_array)
                         intensity_array = intensity_array / np.max(intensity_array) * 999  # will be converted to float32
 
-                        if mz_array.size == 0:
+                        if sum(intensity_array > 0) < min_peak:
                             continue
 
                         peaks = np.column_stack((mz_array, intensity_array))
@@ -274,10 +274,10 @@ def batch_process_queries(qry_file, batch_size=500):
 
                     mz_array = np.array(spectrum['m/z array'])
                     intensity_array = np.array(spectrum['intensity array'])
-                    tic = round(np.sum(intensity_array))
+                    tic = np.sum(intensity_array)
                     intensity_array = intensity_array / np.max(intensity_array) * 999  # will be converted to float32
 
-                    if mz_array.size == 0:
+                    if sum(intensity_array > 0) < min_peak:
                         continue
 
                     peaks = np.column_stack((mz_array, intensity_array))
@@ -350,7 +350,7 @@ def process_mzml(file_path):
 
                 mz_array = np.array(spectrum['m/z array'])
                 intensity_array = np.array(spectrum['intensity array'])
-                tic = round(np.sum(intensity_array))
+                tic = np.sum(intensity_array)
                 intensity_array = intensity_array / np.max(intensity_array) * 999  # will be converted to float32
 
                 # remove empty peaks
@@ -405,7 +405,7 @@ def process_mzxml(file_path):
 
                 mz_array = np.array(spectrum['m/z array'])
                 intensity_array = np.array(spectrum['intensity array'])
-                tic = round(np.sum(intensity_array))
+                tic = np.sum(intensity_array)
                 intensity_array = intensity_array / np.max(intensity_array) * 999  # will be converted to float32
 
                 # remove empty peaks
@@ -471,7 +471,7 @@ def process_mgf(file_path):
 
             mz_array = np.array(spectrum['m/z array'])
             intensity_array = np.array(spectrum['intensity array'])
-            tic = round(np.sum(intensity_array))
+            tic = np.sum(intensity_array)
             intensity_array = intensity_array / np.max(intensity_array) * 999  # will be converted to float32
 
             if mz_array.size == 0:
@@ -554,6 +554,7 @@ def read_mgf_spectrum(file_obj):
             if spectrum['peaks']:  # Only return if we have peaks
                 this_peaks = np.asarray(spectrum['peaks'])
                 this_peaks[:, 1] = this_peaks[:, 1] / np.max(this_peaks[:, 1]) * 999
+                this_peaks = this_peaks[np.bitwise_and(this_peaks[:, 0] > 0, this_peaks[:, 1] > 0)]
                 spectrum['peaks'] = np.asarray(this_peaks, dtype=np.float32)
 
                 if len(spectrum['peaks']) > 0:
@@ -583,7 +584,7 @@ def read_mgf_spectrum(file_obj):
     return None
 
 
-def iterate_gnps_lib_mgf(mgf_path, buffer_size=2048):
+def iterate_gnps_lib_mgf(mgf_path, buffer_size=8192):
     """Iterate through spectra in an MGF file efficiently using buffered reading.
     Args:
         mgf_path: Path to the MGF file
@@ -601,5 +602,9 @@ def iterate_gnps_lib_mgf(mgf_path, buffer_size=2048):
 
 if __name__ == "__main__":
     # load_qry_file('/Users/shipei/Documents/test_data/mzXML/Standards_p_1ugmL_glycocholic.mzXML')
-    out = load_qry_file('/Users/shipei/Documents/test_data/mgf/CASMI.mgf')
-    print(out)
+    # out = load_qry_file('/Users/shipei/Documents/test_data/mgf/CASMI.mgf')
+    # print(out)
+
+    for batch_specs, prec_mzs in batch_process_queries('/Users/shipei/Documents/test_data/mzXML/Standards_p_1ugmL_glycocholic.mzXML', 4, 20):
+        print(len(batch_specs), prec_mzs)
+        break

@@ -191,23 +191,8 @@ class EntropyGreedy:
              analog_search: bool = False,
              shift: float = 0.0) -> Tuple[float, int]:
         """Calculate similarity between two spectra."""
-        # Handle empty inputs
-        if qry_spec is None or ref_spec is None:
-            return 0.0, 0
 
-        try:
-            # Convert to float32 for memory efficiency
-            qry_spec = np.asarray(qry_spec, dtype=np.float32)
-            ref_spec = np.asarray(ref_spec, dtype=np.float32)
-
-            if qry_spec.size == 0 or ref_spec.size == 0:
-                return 0.0, 0
-
-            if qry_spec.ndim == 1:
-                qry_spec = qry_spec.reshape(-1, 2)
-            if ref_spec.ndim == 1:
-                ref_spec = ref_spec.reshape(-1, 2)
-        except:
+        if qry_spec.size == 0 or ref_spec.size == 0:
             return 0.0, 0
 
         matches_idx1, matches_idx2, scores = collect_peak_pairs(
