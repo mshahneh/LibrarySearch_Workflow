@@ -12,7 +12,7 @@ params.topk = 1
 params.fragment_tolerance = 0.5
 params.pm_tolerance = 2.0
 
-params.library_min_cosine = 0.7
+params.library_min_similarity = 0.7
 params.library_min_matched_peaks = 6
 
 params.merge_batch_size = 1000 //Not a UI parameter
@@ -30,9 +30,9 @@ params.analog_max_shift = 1999
 
 // GNPS_New Parameters
 params.search_algorithm = "cos"
-params.rel_int_threshold = 0.02
+params.rel_int_threshold = 0.01
 params.prec_mz_removal_da = 1.5
-params.max_peak_num = 25
+params.max_peak_num = 30
 params.peak_transformation = 'sqrt'
 
 // Blink Parameters
@@ -66,7 +66,7 @@ process searchDataGNPS {
         --pm_tolerance "$params.pm_tolerance" \
         --fragment_tolerance "$params.fragment_tolerance" \
         --topk $params.topk \
-        --library_min_cosine $params.library_min_cosine \
+        --library_min_cosine $params.library_min_similarity \
         --library_min_matched_peaks $params.library_min_matched_peaks \
         --analog_search "$params.analog_search" \
         --full_relative_query_path "$full_path"
@@ -79,7 +79,7 @@ process searchDataGNPSNew{
 
     conda "$TOOL_FOLDER/conda_env_gnps_new.yml"
 
-    //cache 'lenient'
+    cache 'lenient'
 
     input:
     tuple file(input_library), file(input_spectrum)
@@ -98,7 +98,7 @@ process searchDataGNPSNew{
         --analog_max_shift $params.analog_max_shift \
         --pm_tol $params.pm_tolerance \
         --frag_tol $params.fragment_tolerance \
-        --min_score $params.library_min_cosine \
+        --min_score $params.library_min_similarity \
         --min_matched_peak $params.library_min_matched_peaks \
         --rel_int_threshold $params.rel_int_threshold \
         --prec_mz_removal_da $params.prec_mz_removal_da \

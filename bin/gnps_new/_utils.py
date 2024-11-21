@@ -62,7 +62,7 @@ def clean_peaks(peaks, prec_mz,
         return np.zeros((0, 2), dtype=np.float32)
 
     # Maximum number of peaks
-    if max_peak_num > 0 and peaks.shape[0] > max_peak_num:
+    if max_peak_num > 0 and len(peaks) > max_peak_num:
         # Sort the spectrum by intensity.
         peaks = peaks[np.argsort(peaks[:, 1])[-max_peak_num:]]
 

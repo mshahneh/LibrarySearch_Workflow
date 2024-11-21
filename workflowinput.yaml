@@ -59,9 +59,9 @@ parameterlist:
       formvalue: "0.5"
       tooltip: "fragment_tolerance"
 
-    - displayname: Library Minimum Similarity
+    - displayname: Library Minimum Similarity Score
       paramtype: text
-      nf_paramname: library_min_cosine
+      nf_paramname: library_min_similarity
       formplaceholder: Enter the library minimum similarity score
       formvalue: "0.7"
 
@@ -121,22 +121,22 @@ parameterlist:
       paramtype: text
       nf_paramname: rel_int_threshold
       formplaceholder: Enter the relative intensity threshold for spectral cleaning (0-1)
-      formvalue: "0.02"
-      tooltip: "0.02 means 2% relative intensity threshold. Spectral cleaning is applied to both query and library spectra before similarity calculation."
+      formvalue: "0.01"
+      tooltip: "0.01 means 1% relative intensity threshold. Spectral cleaning is applied to both query and library spectra."
 
     - displayname: Precursor ion removal in Da (MS/MS cleaning)
       paramtype: text
       nf_paramname: prec_mz_removal_da
       formplaceholder: Enter the precursor ion removal threshold in Da (MS/MS peaks with m/z larger than precursor m/z minus this value will be removed)
       formvalue: "1.5"
-      tooltip: "All ions with m/z larger than precursor m/z minus 1.5 Da will be removed. Spectral cleaning is applied to both query and library spectra before similarity calculation."
+      tooltip: "All ions with m/z larger than precursor m/z minus 1.5 Da will be removed. Spectral cleaning is applied to both query and library spectra."
 
     - displayname: Top N peak number (MS/MS cleaning)
       paramtype: text
       nf_paramname: max_peak_num
-      formplaceholder: Enter the top N peak number (Top N peaks with highest intensities will be kept)
-      formvalue: "25"
-      tooltip: "Top 25 ions with highest intensities will be kept. Set it to -1 to disable this cleaning. Spectral cleaning is applied to both query and library spectra before similarity calculation."
+      formplaceholder: Enter the top N peak number (Top N peaks with the highest intensities will be kept)
+      formvalue: "30"
+      tooltip: "Top 30 ions with the highest intensities will be kept. You can set it to -1 to disable this cleaning (use all peaks), but this will greatly increase computation time. Spectral cleaning is applied to both query and library spectra."
 
     - displayname: Peak intensity transformation
       paramtype: select

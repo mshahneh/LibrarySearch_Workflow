@@ -13,7 +13,7 @@ def main(gnps_lib_mgf, qry_file,
          algorithm='cos', analog_search=False, analog_max_shift=200.,
          pm_tol=0.02, frag_tol=0.05,
          min_score=0.7, min_matched_peak=3,
-         rel_int_threshold=0.02, prec_mz_removal_da=1.5, peak_transformation='sqrt', max_peak_num=25
+         rel_int_threshold=0.01, prec_mz_removal_da=1.5, peak_transformation='sqrt', max_peak_num=30
          ):
     """
     Main function to search GNPS library
@@ -65,15 +65,13 @@ def main(gnps_lib_mgf, qry_file,
                 bad_ref_indices.add(gnps_idx)
                 continue
 
-            ref_prec_mz = float(spec['PEPMASS'])
-
             # precursor mz check
             if analog_search:
-                if abs(ref_prec_mz - qry_spec.precursor_mz) > analog_max_shift:
+                if abs(spec['PEPMASS'] - qry_spec.precursor_mz) > analog_max_shift:
                     continue
             else:
                 # exact search
-                if abs(ref_prec_mz - qry_spec.precursor_mz) > pm_tol:
+                if abs(spec['PEPMASS'] - qry_spec.precursor_mz) > pm_tol:
                     continue
 
             # clean peaks
@@ -90,7 +88,7 @@ def main(gnps_lib_mgf, qry_file,
 
             # clean ref peaks
             ref_peaks = clean_peaks(spec['peaks'],
-                                    ref_prec_mz,
+                                    spec['PEPMASS'],
                                     rel_int_threshold=rel_int_threshold,
                                     prec_mz_removal_da=prec_mz_removal_da,
                                     peak_transformation=peak_transformation,
@@ -134,13 +132,13 @@ def main(gnps_lib_mgf, qry_file,
                 'FileScanUniqueID': '',  # will be filled later
                 'FDR': '',
                 'LibraryName': '',
-                'mzErrorPPM': round((qry_spec.precursor_mz - ref_prec_mz) / ref_prec_mz * 1e6, 2),
+                'mzErrorPPM': round((qry_spec.precursor_mz - spec['PEPMASS']) / spec['PEPMASS'] * 1e6, 2),
                 'LibMetaData': '',
                 'Smiles': '',
                 'Inchi': '',
                 'LibSearchSharedPeaks': n_matches,
                 'Abundance': '',
-                'ParentMassDiff': round(qry_spec.precursor_mz - ref_prec_mz, 4),
+                'ParentMassDiff': round(qry_spec.precursor_mz - spec['PEPMASS'], 4),
                 'SpecMZ': qry_spec.precursor_mz,
                 'ExactMass': '',
                 'LibrarySpectrumID': spec['SPECTRUMID']
@@ -192,11 +190,11 @@ if __name__ == "__main__":
     argparse.add_argument('--frag_tol', type=float, default=0.05, help='Fragment m/z tolerance')
     argparse.add_argument('--min_score', type=float, default=0.7, help='Minimum score')
     argparse.add_argument('--min_matched_peak', type=int, default=3, help='Minimum matched peaks')
-    argparse.add_argument('--rel_int_threshold', type=float, default=0.02, help='Relative intensity threshold')
+    argparse.add_argument('--rel_int_threshold', type=float, default=0.01, help='Relative intensity threshold')
     argparse.add_argument('--prec_mz_removal_da', type=float, default=1.5, help='Precursor m/z removal')
     argparse.add_argument('--peak_transformation', type=str, default='sqrt',
                           help='Peak transformation, sqrt or none')
-    argparse.add_argument('--max_peak_num', type=int, default=25, help='Maximum number of peaks')
+    argparse.add_argument('--max_peak_num', type=int, default=30, help='Maximum number of peaks')
 
     args = argparse.parse_args()
 
