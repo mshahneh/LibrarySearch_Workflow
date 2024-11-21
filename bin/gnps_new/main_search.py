@@ -10,6 +10,7 @@ from entropy import EntropyGreedy
 from file_io import iter_spectra, batch_process_queries, iterate_gnps_lib_mgf
 
 BUFFER_SIZE = 2000  # number of matched rows to write at once
+QRY_BATCH_SIZE = 2500  # number of query spectra to process at once
 CACHE_SIZE_OF_REF_CLEANED_PEAKS = 1000  # number of ref peaks to cache
 
 
@@ -168,7 +169,7 @@ def main_batch(gnps_lib_mgf, qry_file,
                pm_tol=0.02, frag_tol=0.05,
                min_score=0.7, min_matched_peak=3,
                rel_int_threshold=0.01, prec_mz_removal_da=1.5, peak_transformation='sqrt', max_peak_num=50,
-               qry_batch_size=1000):
+               qry_batch_size=QRY_BATCH_SIZE):
     """
     Main function to search GNPS library
 
@@ -199,7 +200,7 @@ def main_batch(gnps_lib_mgf, qry_file,
     matches_buffer = []
 
     bad_ref_indices = set()  # ref spectra that has peaks less than min_matched_peak
-    ref_cleaned_peaks = {}  # ref spectra that has been cleaned, gnps_idx: peaks
+    # ref_cleaned_peaks = {}  # ref spectra that has been cleaned, gnps_idx: peaks
     for batch_specs, batch_prec_mzs in batch_process_queries(qry_file, min_matched_peak, qry_batch_size):
 
         # iterate GNPS library
@@ -223,23 +224,34 @@ def main_batch(gnps_lib_mgf, qry_file,
             if len(v) == 0:
                 continue
 
-            # check if ref peaks are already cleaned
-            if gnps_idx in ref_cleaned_peaks:
-                ref_peaks = ref_cleaned_peaks[gnps_idx]
-            else:
-                # clean ref peaks
-                ref_peaks = clean_peaks(spec['peaks'],
-                                        spec['PEPMASS'],
-                                        rel_int_threshold=rel_int_threshold,
-                                        prec_mz_removal_da=prec_mz_removal_da,
-                                        peak_transformation=peak_transformation,
-                                        max_peak_num=max_peak_num)
-                if len(ref_peaks) < min_matched_peak:
-                    bad_ref_indices.add(gnps_idx)
-                    continue
-                else:
-                    if len(ref_cleaned_peaks) < CACHE_SIZE_OF_REF_CLEANED_PEAKS:
-                        ref_cleaned_peaks[gnps_idx] = ref_peaks
+            # clean ref peaks
+            ref_peaks = clean_peaks(spec['peaks'],
+                                    spec['PEPMASS'],
+                                    rel_int_threshold=rel_int_threshold,
+                                    prec_mz_removal_da=prec_mz_removal_da,
+                                    peak_transformation=peak_transformation,
+                                    max_peak_num=max_peak_num)
+            if len(ref_peaks) < min_matched_peak:
+                bad_ref_indices.add(gnps_idx)
+                continue
+
+            # # check if ref peaks are already cleaned
+            # if gnps_idx in ref_cleaned_peaks:
+            #     ref_peaks = ref_cleaned_peaks[gnps_idx]
+            # else:
+            #     # clean ref peaks
+            #     ref_peaks = clean_peaks(spec['peaks'],
+            #                             spec['PEPMASS'],
+            #                             rel_int_threshold=rel_int_threshold,
+            #                             prec_mz_removal_da=prec_mz_removal_da,
+            #                             peak_transformation=peak_transformation,
+            #                             max_peak_num=max_peak_num)
+            #     if len(ref_peaks) < min_matched_peak:
+            #         bad_ref_indices.add(gnps_idx)
+            #         continue
+            #     else:
+            #         if len(ref_cleaned_peaks) < CACHE_SIZE_OF_REF_CLEANED_PEAKS:
+            #             ref_cleaned_peaks[gnps_idx] = ref_peaks
 
             for i in v:
                 qry_spec = batch_specs[i]
