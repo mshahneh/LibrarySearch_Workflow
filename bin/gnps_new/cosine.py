@@ -28,7 +28,7 @@ import numpy as np
 def find_matches(ref_spec_mz: np.ndarray, qry_spec_mz: np.ndarray,
                  tolerance: float, shift: float = 0.0) -> Tuple[np.ndarray, np.ndarray]:
     """Find matching peaks between two spectra."""
-    matches_idx1 = np.empty(min(len(ref_spec_mz), len(qry_spec_mz)), dtype=np.int32)
+    matches_idx1 = np.empty(len(ref_spec_mz) * len(qry_spec_mz), dtype=np.int64)
     matches_idx2 = np.empty_like(matches_idx1)
     match_count = 0
     lowest_idx = 0
@@ -58,13 +58,13 @@ def collect_peak_pairs(ref_spec: np.ndarray, qry_spec: np.ndarray, min_matched_p
     """Find and score matching peak pairs between spectra."""
 
     if len(ref_spec) == 0 or len(qry_spec) == 0:
-        return np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.float32)
+        return np.zeros(0, dtype=np.int64), np.zeros(0, dtype=np.int64), np.zeros(0, dtype=np.float32)
 
     # Extract m/z values
     matches_idx1, matches_idx2 = find_matches(ref_spec[:, 0], qry_spec[:, 0], tolerance, shift)
 
     if len(matches_idx1) < min_matched_peak:
-        return np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.float32)
+        return np.zeros(0, dtype=np.int64), np.zeros(0, dtype=np.int64), np.zeros(0, dtype=np.float32)
 
     # Calculate scores for matches
     scores = ref_spec[matches_idx1, 1] * qry_spec[matches_idx2, 1]

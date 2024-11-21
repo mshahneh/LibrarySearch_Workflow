@@ -9,7 +9,6 @@ class Spectrum:
     """
     A class to represent a mass spectrum with its associated metadata.
     """
-    # file: str
     scan: int
     precursor_mz: float
     rt: float
@@ -24,18 +23,17 @@ class Spectrum:
         assert self.peaks.ndim == 2, "Peaks must be 2D array"
         assert self.peaks.shape[1] == 2, "Peaks must have shape (n, 2) for (mz, intensity)"
 
-        # do some roundings, reduce memory usage
-        self.precursor_mz = round(self.precursor_mz, 4)
-        self.rt = round(self.rt, 4)
-        self.tic = round(self.tic)
-
         # Ensure float32 type
         self.peaks = np.asarray(self.peaks, dtype=np.float32)
 
 
-@njit
-def clean_peaks(peaks, prec_mz,
-                rel_int_threshold=0.01, prec_mz_removal_da=1.5, peak_transformation='sqrt', max_peak_num=50):
+# @njit
+def clean_peaks(peaks: np.ndarray,
+                prec_mz: float,
+                rel_int_threshold: float = 0.01,
+                prec_mz_removal_da: float = 1.5,
+                peak_transformation: str = 'sqrt',
+                max_peak_num: int = 50):
     """
     Clean MS/MS peaks
     """

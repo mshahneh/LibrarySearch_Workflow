@@ -13,7 +13,7 @@ def main(gnps_lib_mgf, qry_file,
          algorithm='cos', analog_search=False, analog_max_shift=200.,
          pm_tol=0.02, frag_tol=0.05,
          min_score=0.7, min_matched_peak=3,
-         rel_int_threshold=0.01, prec_mz_removal_da=1.5, peak_transformation='sqrt', max_peak_num=30
+         rel_int_threshold=0.01, prec_mz_removal_da=1.5, peak_transformation='sqrt', max_peak_num=50
          ):
     """
     Main function to search GNPS library
@@ -43,7 +43,7 @@ def main(gnps_lib_mgf, qry_file,
 
     # Initialize list for batch writing
     matches_buffer = []
-    buffer_size = 50  # Adjust based on available memory
+    buffer_size = 2000  # number of matches to write at once
 
     bad_ref_indices = set()  # ref spectra that has peaks less than min_matched_peak
     for qry_spec in iter_spectra(qry_file):
@@ -113,7 +113,7 @@ def main(gnps_lib_mgf, qry_file,
             # store matched rows
             matches_buffer.append({
                 '#Scan#': qry_spec.scan,
-                'SpectrumFile': '',  # will be filled later
+                'SpectrumFile': qry_file_name,
                 'Annotation': '',
                 'OrigAnnotation': '',
                 'Protein': '',
@@ -123,16 +123,16 @@ def main(gnps_lib_mgf, qry_file,
                 'startMass': '',
                 'Charge': qry_spec.charge,
                 'MQScore': round(score, 4),
-                'p-value': qry_spec.rt,  # RT value
+                'p-value': round(qry_spec.rt, 4), # RT value
                 'isDecoy': '',
                 'StrictEnvelopeScore': '',
-                'UnstrictEvelopeScore': qry_spec.tic,  # TIC value
+                'UnstrictEvelopeScore': round(qry_spec.tic),  # TIC value
                 'CompoundName': '',
                 'Organism': '',
-                'FileScanUniqueID': '',  # will be filled later
+                'FileScanUniqueID': f'{qry_file_name}_{qry_spec.scan}',
                 'FDR': '',
                 'LibraryName': '',
-                'mzErrorPPM': round((qry_spec.precursor_mz - spec['PEPMASS']) / spec['PEPMASS'] * 1e6, 2),
+                'mzErrorPPM': round((qry_spec.precursor_mz - spec['PEPMASS']) / spec['PEPMASS'] * 1e6, 4),
                 'LibMetaData': '',
                 'Smiles': '',
                 'Inchi': '',
@@ -144,7 +144,7 @@ def main(gnps_lib_mgf, qry_file,
                 'LibrarySpectrumID': spec['SPECTRUMID']
             })
 
-            # Write buffer if full
+            # Write buffer to file
             if len(matches_buffer) >= buffer_size:
                 write_batch_results(matches_buffer, out_path)
                 matches_buffer = []
@@ -153,7 +153,6 @@ def main(gnps_lib_mgf, qry_file,
     if matches_buffer:
         write_batch_results(matches_buffer, out_path)
 
-    reformat_all_results(qry_file_name, out_path)
     return
 
 
@@ -167,16 +166,6 @@ def write_batch_results(match_rows, out_path):
     else:
         # Append without header
         df.to_csv(out_path, sep='\t', index=False, mode='a', header=False)
-
-
-def reformat_all_results(qry_file_name, out_path):
-    """Reformat all results"""
-    if not os.path.exists(out_path):
-        return
-    df = pd.read_csv(out_path, sep='\t')
-    df["SpectrumFile"] = qry_file_name
-    df['FileScanUniqueID'] = df.apply(lambda x: str(x['SpectrumFile']) + "_" + str(x['#Scan#']), axis=1)
-    df.to_csv(out_path, sep='\t', index=False)
 
 
 if __name__ == "__main__":
@@ -195,7 +184,7 @@ if __name__ == "__main__":
     argparse.add_argument('--prec_mz_removal_da', type=float, default=1.5, help='Precursor m/z removal')
     argparse.add_argument('--peak_transformation', type=str, default='sqrt',
                           help='Peak transformation, sqrt or none')
-    argparse.add_argument('--max_peak_num', type=int, default=30, help='Maximum number of peaks')
+    argparse.add_argument('--max_peak_num', type=int, default=50, help='Maximum number of peaks')
 
     args = argparse.parse_args()
 

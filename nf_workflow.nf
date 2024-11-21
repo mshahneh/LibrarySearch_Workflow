@@ -32,7 +32,7 @@ params.analog_max_shift = 1999
 params.search_algorithm = "cos"
 params.rel_int_threshold = 0.01
 params.prec_mz_removal_da = 1.5
-params.max_peak_num = 30
+params.max_peak_num = 50
 params.peak_transformation = 'sqrt'
 
 // Blink Parameters
@@ -79,7 +79,7 @@ process searchDataGNPSNew{
 
     conda "$TOOL_FOLDER/conda_env_gnps_new.yml"
 
-    cache 'lenient'
+//     cache 'lenient'
 
     input:
     tuple file(input_library), file(input_spectrum)

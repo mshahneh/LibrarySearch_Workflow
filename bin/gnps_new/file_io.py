@@ -132,7 +132,7 @@ def iter_spectra(qry_file):
         raise ValueError(f"Unsupported file format: {file_format}")
 
 
-def batch_process_queries(qry_file, batch_size=20):
+def batch_process_queries(qry_file, batch_size=500):
     """Process query spectra in batches to reduce memory usage"""
     file_format = os.path.splitext(qry_file)[1].lower()
     batch_specs = []
@@ -150,8 +150,7 @@ def batch_process_queries(qry_file, batch_size=20):
                         mz_array = np.array(spectrum['m/z array'])
                         intensity_array = np.array(spectrum['intensity array'])
                         tic = round(np.sum(intensity_array))
-                        intensity_array = intensity_array / np.max(
-                            intensity_array) * 999  # will be converted to float32
+                        intensity_array = intensity_array / np.max(intensity_array) * 999  # will be converted to float32
 
                         # Skip empty peaks
                         if mz_array.size == 0:
@@ -209,8 +208,7 @@ def batch_process_queries(qry_file, batch_size=20):
                         mz_array = np.array(spectrum['m/z array'])
                         intensity_array = np.array(spectrum['intensity array'])
                         tic = round(np.sum(intensity_array))
-                        intensity_array = intensity_array / np.max(
-                            intensity_array) * 999  # will be converted to float32
+                        intensity_array = intensity_array / np.max(intensity_array) * 999  # will be converted to float32
 
                         if mz_array.size == 0:
                             continue
