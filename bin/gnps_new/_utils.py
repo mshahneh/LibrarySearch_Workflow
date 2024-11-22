@@ -9,10 +9,10 @@ class Spectrum:
     """
     A class to represent a mass spectrum with its associated metadata.
     """
-    scan: int
+    scan: object
     precursor_mz: float
     rt: float
-    charge: int
+    charge: object
     tic: float
     peaks: np.ndarray
     peaks_cleaned: bool = False
@@ -28,7 +28,7 @@ class Spectrum:
         self.peaks = np.asarray(self.peaks, dtype=np.float32)
 
 
-# @njit
+@njit
 def clean_peaks(peaks: np.ndarray,
                 prec_mz: float,
                 rel_int_threshold: float = 0.01,

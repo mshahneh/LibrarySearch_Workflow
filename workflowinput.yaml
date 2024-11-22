@@ -121,7 +121,7 @@ parameterlist:
       paramtype: text
       nf_paramname: rel_int_threshold
       formplaceholder: Enter the relative intensity threshold for spectral cleaning (0-1)
-      formvalue: "0.01"
+      formvalue: "0.0"
       tooltip: "0.01 means 1% relative intensity threshold. Spectral cleaning is applied to both query and library spectra."
 
     - displayname: Precursor ion removal in Da (MS/MS cleaning)
