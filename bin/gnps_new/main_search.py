@@ -214,3 +214,17 @@ if __name__ == "__main__":
                min_score=args.min_score, min_matched_peak=args.min_matched_peak,
                rel_int_threshold=args.rel_int_threshold, prec_mz_removal_da=args.prec_mz_removal_da,
                peak_transformation=args.peak_transformation, max_peak_num=args.max_peak_num)
+
+    # import matplotlib.pyplot as plt
+    # def plot_spectrum(peaks):
+    #     plt.figure(figsize=(10, 4))
+    #     plt.stem(peaks[:, 0], peaks[:, 1], basefmt=' ')
+    #     plt.xlim(0, np.max(peaks[:, 0]) * 1.1)
+    #     plt.show()
+    #
+    # main_batch('/Users/shipei/Documents/test_data/mgf/test_ref.mgf',
+    #            '/Users/shipei/Documents/test_data/mgf/test.mgf', 'rev_cos',
+    #            analog_search=False, analog_max_shift=200.0,
+    #            pm_tol=0.02, frag_tol=0.02,
+    #            min_score=0.6, min_matched_peak=4,
+    #            rel_int_threshold=0.0)

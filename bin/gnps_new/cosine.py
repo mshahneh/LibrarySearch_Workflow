@@ -67,7 +67,7 @@ def collect_peak_pairs(ref_spec: np.ndarray, qry_spec: np.ndarray, min_matched_p
         return np.zeros(0, dtype=np.int64), np.zeros(0, dtype=np.int64), np.zeros(0, dtype=np.float32)
 
     # Calculate scores for matches
-    scores = ref_spec[matches_idx1, 1] * qry_spec[matches_idx2, 1]
+    scores = (ref_spec[matches_idx1, 1] * qry_spec[matches_idx2, 1]).astype(np.float32)
 
     # Sort by score descending
     sort_idx = np.argsort(-scores)

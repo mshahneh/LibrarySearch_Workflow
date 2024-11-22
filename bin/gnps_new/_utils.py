@@ -69,4 +69,4 @@ def clean_peaks(peaks: np.ndarray,
     if peak_transformation == 'sqrt':
         peaks[:, 1] = np.sqrt(peaks[:, 1])
 
-    return peaks
+    return np.asarray(peaks, dtype=np.float32)
