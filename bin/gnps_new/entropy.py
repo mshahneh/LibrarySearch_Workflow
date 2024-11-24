@@ -195,6 +195,10 @@ class EntropyGreedy:
         if qry_spec.size == 0 or ref_spec.size == 0:
             return 0.0, 0
 
+        # normalize the intensity
+        ref_spec[:, 1] /= np.sum(ref_spec[:, 1])
+        qry_spec[:, 1] /= np.sum(qry_spec[:, 1])
+
         matches_idx1, matches_idx2, scores = collect_peak_pairs(
             ref_spec, qry_spec, min_matched_peak,
             self.tolerance, shift
