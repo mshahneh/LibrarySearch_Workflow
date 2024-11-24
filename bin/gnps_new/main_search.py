@@ -130,7 +130,7 @@ def main_batch(gnps_lib_mgf, qry_file,
                     continue
 
                 # filter by spec_usage if reverse scoring
-                if reverse and spec_usage < 0.6:
+                if reverse and spec_usage < 0.5:
                     continue
 
                 # store matched rows
