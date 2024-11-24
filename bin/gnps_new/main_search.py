@@ -26,15 +26,16 @@ def main_batch(gnps_lib_mgf, qry_file,
     algorithm: str. 'cos' or 'entropy'
     peak_transformation: str. 'sqrt' or 'none'
     """
+
+    sqrt_transform = True if peak_transformation == 'sqrt' else False
+
+    reverse = True if 'rev_' in algorithm else False
+
     # select search algorithm
-    if algorithm == 'cos':
-        search_eng = CosineGreedy(tolerance=frag_tol, reverse=False)
-    elif algorithm == 'rev_cos':
-        search_eng = CosineGreedy(tolerance=frag_tol, reverse=True)
-    elif algorithm == 'entropy':
-        search_eng = EntropyGreedy(tolerance=frag_tol, reverse=False)
-    elif algorithm == 'rev_entropy':
-        search_eng = EntropyGreedy(tolerance=frag_tol, reverse=True)
+    if algorithm in ['cos', 'rev_cos']:
+        search_eng = CosineGreedy(tolerance=frag_tol, reverse=reverse)
+    elif algorithm in ['entropy', 'rev_entropy']:
+        search_eng = EntropyGreedy(tolerance=frag_tol, reverse=reverse)
     else:
         raise ValueError("Invalid algorithm")
 
@@ -79,7 +80,6 @@ def main_batch(gnps_lib_mgf, qry_file,
                                     spec['PEPMASS'],
                                     rel_int_threshold=rel_int_threshold,
                                     prec_mz_removal_da=prec_mz_removal_da,
-                                    peak_transformation=peak_transformation,
                                     max_peak_num=max_peak_num)
             if len(ref_peaks) < min_matched_peak:
                 bad_ref_indices.add(gnps_idx)
@@ -112,21 +112,25 @@ def main_batch(gnps_lib_mgf, qry_file,
                                                  qry_spec.precursor_mz,
                                                  rel_int_threshold=rel_int_threshold,
                                                  prec_mz_removal_da=prec_mz_removal_da,
-                                                 peak_transformation=peak_transformation,
                                                  max_peak_num=max_peak_num)
                     qry_spec.peaks_cleaned = True
                 if len(qry_spec.peaks) < min_matched_peak:
                     continue
 
                 # calculate similarity score
-                score, n_matches = search_eng.pair(qry_spec.peaks,
-                                                   ref_peaks,
-                                                   min_matched_peak=min_matched_peak,
-                                                   analog_search=analog_search,
-                                                   shift=0.0)
+                score, n_matches, spec_usage = search_eng.pair(qry_spec.peaks,
+                                                               ref_peaks,
+                                                               min_matched_peak=min_matched_peak,
+                                                               sqrt_transform=sqrt_transform,
+                                                               analog_search=analog_search,
+                                                               shift=0.0)
 
                 # filter by minimum score and minimum matched peaks
                 if score < min_score or n_matches < min_matched_peak:
+                    continue
+
+                # filter by spec_usage if reverse scoring
+                if reverse and spec_usage < 0.6:
                     continue
 
                 # store matched rows

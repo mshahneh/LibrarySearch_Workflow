@@ -33,7 +33,6 @@ def clean_peaks(peaks: np.ndarray,
                 prec_mz: float,
                 rel_int_threshold: float = 0.01,
                 prec_mz_removal_da: float = 1.5,
-                peak_transformation: str = 'sqrt',
                 max_peak_num: int = 50):
     """
     Clean MS/MS peaks
@@ -64,9 +63,5 @@ def clean_peaks(peaks: np.ndarray,
 
     # Sort peaks by m/z
     peaks = peaks[np.argsort(peaks[:, 0])]
-
-    # Transform peak intensities
-    if peak_transformation == 'sqrt':
-        peaks[:, 1] = np.sqrt(peaks[:, 1])
 
     return np.asarray(peaks, dtype=np.float32)
