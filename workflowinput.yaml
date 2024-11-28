@@ -1,7 +1,7 @@
 workflowname: librarysearch_workflow
 workflowdescription: librarysearch_workflow
 workflowlongdescription: This is a library search workflow for GNPS2
-workflowversion: "2024.11.25"
+workflowversion: "2024.11.28"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -121,7 +121,7 @@ parameterlist:
       paramtype: text
       nf_paramname: rel_int_threshold
       formplaceholder: Enter the relative intensity threshold for spectral cleaning (0-1)
-      formvalue: "0.01"
+      formvalue: "0.0"
       tooltip: "0.01 means 1% relative intensity threshold. Spectral cleaning is applied to both query and library spectra."
 
     - displayname: Precursor ion removal in Da (MS/MS cleaning)
@@ -141,12 +141,20 @@ parameterlist:
     - displayname: Peak intensity transformation
       paramtype: select
       nf_paramname: peak_transformation
-      formvalue: none
+      formvalue: sqrt
       options:
         - value: none
           display: No peak transformation applied
         - value: sqrt
           display: Square root transformation
+      tooltip: "Sqrt transformation is only applied when (reverse) cosine similarity is used. Entropy similarity is not designed for transformed data."
+
+    - displayname: Unmatched peak penalty factor (reverse search)
+      paramtype: text
+      nf_paramname: unmatched_penalty_factor
+      formplaceholder: Enter the unmatched_penalty_factor (designed for reverse spectral search, peak intensity will be penalized by this factor if it is not matched)
+      formvalue: "0.5"
+      tooltip: "This only works when reverse cosine or reverse entropy similarity is used. Peak intensity will be penalized by this factor if it is not matched. A factor of 0 means no penalty, ie. traditional cosine or entropy similarity."
 
 
     - displayname: Blink Parameters

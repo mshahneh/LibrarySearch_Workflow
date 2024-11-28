@@ -30,10 +30,11 @@ params.analog_max_shift = 1999
 
 // GNPS_New Parameters
 params.search_algorithm = "cos"
-params.rel_int_threshold = 0.01
+params.rel_int_threshold = 0.0
 params.prec_mz_removal_da = 1.5
 params.max_peak_num = 30
 params.peak_transformation = 'sqrt'
+params.unmatched_penalty_factor = 0.5
 
 // Blink Parameters
 params.blink_ionization = "positive"
@@ -103,7 +104,8 @@ process searchDataGNPSNew{
         --rel_int_threshold $params.rel_int_threshold \
         --prec_mz_removal_da $params.prec_mz_removal_da \
         --peak_transformation $params.peak_transformation \
-        --max_peak_num $params.max_peak_num
+        --max_peak_num $params.max_peak_num \
+        --unmatched_penalty_factor $params.unmatched_penalty_factor
     """
 }
 

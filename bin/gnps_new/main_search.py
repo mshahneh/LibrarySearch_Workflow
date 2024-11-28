@@ -1,12 +1,13 @@
 import argparse
 import os
+from encodings import search_function
 
 import numpy as np
 import pandas as pd
 
 from _utils import clean_peaks
-from cosine import CosineGreedy
-from entropy import EntropyGreedy
+from cosine import cosine_similarity
+from entropy import entropy_similarity
 from file_io import batch_process_queries, iterate_gnps_lib_mgf
 
 BUFFER_SIZE = 2000  # number of matched rows to write at once
@@ -18,26 +19,34 @@ def main_batch(gnps_lib_mgf, qry_file,
                algorithm='cos', analog_search=False, analog_max_shift=200.,
                pm_tol=0.02, frag_tol=0.05,
                min_score=0.7, min_matched_peak=3,
-               rel_int_threshold=0.01, prec_mz_removal_da=1.5, peak_transformation='sqrt', max_peak_num=50,
+               rel_int_threshold=0.01, prec_mz_removal_da=1.5,
+               peak_transformation='sqrt', max_peak_num=50,
+               unmatched_penalty_factor=0.5,
                qry_batch_size=QRY_BATCH_SIZE):
     """
     Main function to search GNPS library
 
-    algorithm: str. 'cos' or 'entropy'
-    peak_transformation: str. 'sqrt' or 'none'
+    algorithm: str. cos, entropy, rev_cos, rev_entropy
+    peak_transformation: str. 'sqrt' or 'none', only applied on cosine similarity
     """
 
     sqrt_transform = True if peak_transformation == 'sqrt' else False
 
-    reverse = True if 'rev_' in algorithm else False
-
-    # select search algorithm
     if algorithm in ['cos', 'rev_cos']:
-        search_eng = CosineGreedy(tolerance=frag_tol, reverse=reverse)
+        search_eng = cosine_similarity
     elif algorithm in ['entropy', 'rev_entropy']:
-        search_eng = EntropyGreedy(tolerance=frag_tol, reverse=reverse)
+        search_eng = entropy_similarity
     else:
-        raise ValueError("Invalid algorithm")
+        raise ValueError(f"Invalid algorithm: {algorithm}")
+
+    search_kwargs = {
+        'tolerance': frag_tol,
+        'min_matched_peak': min_matched_peak,
+        'analog_search': analog_search,
+        'sqrt_transform': sqrt_transform,
+        'penalty': unmatched_penalty_factor if 'rev' in algorithm else 0.0,
+        'shift': 0.0
+    }
 
     # Some preprocessing
     qry_file_name = os.path.basename(qry_file)
@@ -118,19 +127,10 @@ def main_batch(gnps_lib_mgf, qry_file,
                     continue
 
                 # calculate similarity score
-                score, n_matches, spec_usage = search_eng.pair(qry_spec.peaks,
-                                                               ref_peaks,
-                                                               min_matched_peak=min_matched_peak,
-                                                               sqrt_transform=sqrt_transform,
-                                                               analog_search=analog_search,
-                                                               shift=0.0)
+                score, n_matches = search_eng(qry_spec.peaks, ref_peaks, **search_kwargs)
 
                 # filter by minimum score and minimum matched peaks
                 if score < min_score or n_matches < min_matched_peak:
-                    continue
-
-                # filter by spec_usage if reverse scoring
-                if reverse and spec_usage < 0.6:
                     continue
 
                 # store matched rows
@@ -208,6 +208,7 @@ if __name__ == "__main__":
     argparse.add_argument('--peak_transformation', type=str, default='sqrt',
                           help='Peak transformation, sqrt or none')
     argparse.add_argument('--max_peak_num', type=int, default=50, help='Maximum number of peaks')
+    argparse.add_argument('--unmatched_penalty_factor', type=float, default=0.5, help='Penalty factor for reverse spectral search')
 
     args = argparse.parse_args()
 
@@ -217,7 +218,8 @@ if __name__ == "__main__":
                pm_tol=args.pm_tol, frag_tol=args.frag_tol,
                min_score=args.min_score, min_matched_peak=args.min_matched_peak,
                rel_int_threshold=args.rel_int_threshold, prec_mz_removal_da=args.prec_mz_removal_da,
-               peak_transformation=args.peak_transformation, max_peak_num=args.max_peak_num)
+               peak_transformation=args.peak_transformation, max_peak_num=args.max_peak_num,
+               unmatched_penalty_factor=args.unmatched_penalty_factor)
 
     # import matplotlib.pyplot as plt
     # def plot_spectrum(peaks):
