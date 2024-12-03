@@ -34,7 +34,7 @@ params.rel_int_threshold = 0.0
 params.prec_mz_removal_da = 1.5
 params.max_peak_num = 30
 params.peak_transformation = 'sqrt'
-params.unmatched_penalty_factor = 0.5
+params.unmatched_penalty_factor = 0.8
 
 // Blink Parameters
 params.blink_ionization = "positive"

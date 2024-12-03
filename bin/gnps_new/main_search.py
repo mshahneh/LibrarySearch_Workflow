@@ -21,7 +21,7 @@ def main_batch(gnps_lib_mgf, qry_file,
                min_score=0.7, min_matched_peak=3,
                rel_int_threshold=0.01, prec_mz_removal_da=1.5,
                peak_transformation='sqrt', max_peak_num=50,
-               unmatched_penalty_factor=0.5,
+               unmatched_penalty_factor=0.8,
                qry_batch_size=QRY_BATCH_SIZE):
     """
     Main function to search GNPS library
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     argparse.add_argument('--peak_transformation', type=str, default='sqrt',
                           help='Peak transformation, sqrt or none')
     argparse.add_argument('--max_peak_num', type=int, default=50, help='Maximum number of peaks')
-    argparse.add_argument('--unmatched_penalty_factor', type=float, default=0.5, help='Penalty factor for reverse spectral search')
+    argparse.add_argument('--unmatched_penalty_factor', type=float, default=0.8, help='Penalty factor for reverse spectral search')
 
     args = argparse.parse_args()
 
