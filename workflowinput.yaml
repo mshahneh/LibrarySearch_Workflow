@@ -1,7 +1,7 @@
 workflowname: librarysearch_workflow
 workflowdescription: librarysearch_workflow
 workflowlongdescription: This is a library search workflow for GNPS2
-workflowversion: "2024.11.30"
+workflowversion: "2024.12.03"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -135,8 +135,8 @@ parameterlist:
       paramtype: text
       nf_paramname: max_peak_num
       formplaceholder: Enter the top N peak number (Top N peaks with the highest intensities will be kept)
-      formvalue: "30"
-      tooltip: "Top 30 ions with the highest intensities will be kept. You can set it to -1 to disable this cleaning (use all peaks), but this will greatly increase computation time. Spectral cleaning is applied to both query and library spectra."
+      formvalue: "50"
+      tooltip: "Top 50 ions with the highest intensities will be kept. You can set it to -1 to disable this cleaning (use all peaks), but this will greatly increase computation time. Spectral cleaning is applied to both query and library spectra."
 
     - displayname: Peak intensity transformation
       paramtype: select
@@ -153,7 +153,7 @@ parameterlist:
       paramtype: text
       nf_paramname: unmatched_penalty_factor
       formplaceholder: Enter the unmatched_penalty_factor (0-1, designed for reverse spectral search, peak intensity will be penalized by this factor if it is not matched)
-      formvalue: "0.8"
+      formvalue: "0.6"
       tooltip: "This only works when reverse cosine or reverse entropy similarity is used. Peak intensity will be penalized by this factor if it is not matched. A factor of 0 means no penalty, ie. traditional cosine or entropy similarity."
 
 
