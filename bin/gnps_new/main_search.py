@@ -164,7 +164,7 @@ def main_batch(gnps_lib_mgf, qry_file,
                     'ParentMassDiff': round(qry_spec.precursor_mz - spec['PEPMASS'], 4),
                     'SpecMZ': qry_spec.precursor_mz,
                     'ExactMass': '',
-                    'LibrarySpectrumID': spec['SPECTRUMID']
+                    'LibrarySpectrumID': spec['SPECTRUMID'] if spec['SPECTRUMID'] != '' else f'scans_{spec["SCANS"]}',
                 })
 
                 # Write buffer to file

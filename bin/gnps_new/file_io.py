@@ -199,22 +199,22 @@ def read_mgf_spectrum(file_obj):
     # Initialize spectrum with common metadata fields
     spectrum = {
         'PEPMASS': 0.0,
-        'CHARGE': '',
-        'MSLEVEL': '',
-        'SOURCE_INSTRUMENT': '',
-        'FILENAME': '',
-        'SEQ': '',
-        'IONMODE': '',
-        'ORGANISM': '',
-        'NAME': '',
-        'PI': '',
-        'DATACOLLECTOR': '',
-        'SMILES': '',
-        'INCHI': '',
-        'INCHIAUX': '',
-        'PUBMED': '',
-        'SUBMITUSER': '',
-        'LIBRARYQUALITY': '',
+        # 'CHARGE': '',
+        # 'MSLEVEL': '',
+        # 'SOURCE_INSTRUMENT': '',
+        # 'FILENAME': '',
+        # 'SEQ': '',
+        # 'IONMODE': '',
+        # 'ORGANISM': '',
+        # 'NAME': '',
+        # 'PI': '',
+        # 'DATACOLLECTOR': '',
+        # 'SMILES': '',
+        # 'INCHI': '',
+        # 'INCHIAUX': '',
+        # 'PUBMED': '',
+        # 'SUBMITUSER': '',
+        # 'LIBRARYQUALITY': '',
         'SPECTRUMID': '',
         'SCANS': '',
         'peaks': []
@@ -247,7 +247,7 @@ def read_mgf_spectrum(file_obj):
 
         # Handle peak data
         if line and not line.startswith(('BEGIN', 'END')):
-            try:
+            if '=' in line:
                 # First try to parse as metadata
                 key, value = line.split('=', 1)
 
@@ -256,13 +256,12 @@ def read_mgf_spectrum(file_obj):
                     spectrum['PEPMASS'] = float(value.strip())  # Handle additional intensity value
                 elif key in spectrum:  # Store other known metadata fields as strings
                     spectrum[key] = value
-            except ValueError:
+            else:
                 # If no '=' found, treat as peak data
                 try:
                     mz, intensity = line.split()
                     spectrum['peaks'].append((float(mz), float(intensity)))
                 except ValueError:
-                    # Skip lines that can't be parsed
                     continue
 
     return None
