@@ -1,6 +1,5 @@
 import argparse
 import os
-from encodings import search_function
 
 import numpy as np
 import pandas as pd
@@ -30,8 +29,6 @@ def main_batch(gnps_lib_mgf, qry_file,
     peak_transformation: str. 'sqrt' or 'none', only applied on cosine similarity
     """
 
-    sqrt_transform = True if peak_transformation == 'sqrt' else False
-
     if algorithm in ['cos', 'rev_cos']:
         search_eng = cosine_similarity
     elif algorithm in ['entropy', 'rev_entropy']:
@@ -42,10 +39,8 @@ def main_batch(gnps_lib_mgf, qry_file,
     search_kwargs = {
         'tolerance': frag_tol,
         'min_matched_peak': min_matched_peak,
-        'analog_search': analog_search,
-        'sqrt_transform': sqrt_transform,
-        'penalty': unmatched_penalty_factor if 'rev' in algorithm else 0.0,
-        'shift': 0.0
+        'sqrt_transform': True if peak_transformation == 'sqrt' else False,
+        'penalty': unmatched_penalty_factor if 'rev' in algorithm else 0.0  # penalty for unmatched peaks, only applied on reverse search
     }
 
     # Some preprocessing
@@ -127,7 +122,10 @@ def main_batch(gnps_lib_mgf, qry_file,
                     continue
 
                 # calculate similarity score
-                score, n_matches = search_eng(qry_spec.peaks, ref_peaks, **search_kwargs)
+                if analog_search:
+                    score, n_matches = search_eng(qry_spec.peaks, ref_peaks, **search_kwargs, shift=qry_spec.precursor_mz - spec['PEPMASS'])
+                else:
+                    score, n_matches = search_eng(qry_spec.peaks, ref_peaks, **search_kwargs, shift=0.0)
 
                 # filter by minimum score and minimum matched peaks
                 if score < min_score or n_matches < min_matched_peak:
@@ -220,17 +218,3 @@ if __name__ == "__main__":
                rel_int_threshold=args.rel_int_threshold, prec_mz_removal_da=args.prec_mz_removal_da,
                peak_transformation=args.peak_transformation, max_peak_num=args.max_peak_num,
                unmatched_penalty_factor=args.unmatched_penalty_factor)
-
-    # import matplotlib.pyplot as plt
-    # def plot_spectrum(peaks):
-    #     plt.figure(figsize=(10, 4))
-    #     plt.stem(peaks[:, 0], peaks[:, 1], basefmt=' ')
-    #     plt.xlim(0, np.max(peaks[:, 0]) * 1.1)
-    #     plt.show()
-    #
-    # main_batch('/Users/shipei/Documents/test_data/mgf/test_ref.mgf',
-    #            '/Users/shipei/Documents/test_data/mgf/test.mgf', 'rev_cos',
-    #            analog_search=False, analog_max_shift=200.0,
-    #            pm_tol=0.02, frag_tol=0.02,
-    #            min_score=0.6, min_matched_peak=4,
-    #            rel_int_threshold=0.0)

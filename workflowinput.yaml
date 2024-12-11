@@ -1,7 +1,7 @@
 workflowname: librarysearch_workflow
 workflowdescription: librarysearch_workflow
 workflowlongdescription: This is a library search workflow for GNPS2
-workflowversion: "2024.12.03"
+workflowversion: "2024.12.11"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -147,14 +147,14 @@ parameterlist:
           display: No peak transformation applied
         - value: sqrt
           display: Square root transformation
-      tooltip: "Sqrt transformation is only applied when (reverse) cosine similarity is used. Entropy similarity is not designed for transformed data."
+      tooltip: "Sqrt transformation is only applied when (reverse) cosine similarity is used. Entropy similarity is not designed for transformed intensities."
 
     - displayname: Unmatched peak penalty factor (reverse search)
       paramtype: text
       nf_paramname: unmatched_penalty_factor
       formplaceholder: Enter the unmatched_penalty_factor (0-1, designed for reverse spectral search, peak intensity will be penalized by this factor if it is not matched)
       formvalue: "0.6"
-      tooltip: "This only works when reverse cosine or reverse entropy similarity is used. Peak intensity will be penalized by this factor if it is not matched. A factor of 0 means no penalty, ie. traditional cosine or entropy similarity."
+      tooltip: "This only works for reverse search. Peak intensity will be penalized by this factor if it is unmatched. A factor of 0 means no penalty, ie. traditional cosine similarity. A factor of 1 means full penalty, ie. traditional reverse cosine similarity."
 
 
     - displayname: Blink Parameters

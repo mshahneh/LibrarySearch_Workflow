@@ -39,7 +39,7 @@ def find_matches(ref_spec_mz: np.ndarray, qry_spec_mz: np.ndarray,
         high_bound = mz + tolerance
 
         for peak2_idx in range(lowest_idx, len(qry_spec_mz)):
-            mz2 = qry_spec_mz[peak2_idx] + shift
+            mz2 = qry_spec_mz[peak2_idx] - shift
             if mz2 > high_bound:
                 break
             if mz2 < low_bound:
@@ -60,8 +60,14 @@ def collect_peak_pairs(ref_spec: np.ndarray, qry_spec: np.ndarray, min_matched_p
     if len(ref_spec) == 0 or len(qry_spec) == 0:
         return np.zeros(0, dtype=np.int64), np.zeros(0, dtype=np.int64), np.zeros(0, dtype=np.float32)
 
-    # Extract m/z values
-    matches_idx1, matches_idx2 = find_matches(ref_spec[:, 0], qry_spec[:, 0], tolerance, shift)
+    # Exact matching
+    matches_idx1, matches_idx2 = find_matches(ref_spec[:, 0], qry_spec[:, 0], tolerance, 0.0)
+
+    # If shift is not 0, perform hybrid search
+    if abs(shift) > 1e-6:
+        matches_idx1_shift, matches_idx2_shift = find_matches(ref_spec[:, 0], qry_spec[:, 0], tolerance, shift)
+        matches_idx1 = np.concatenate((matches_idx1, matches_idx1_shift))
+        matches_idx2 = np.concatenate((matches_idx2, matches_idx2_shift))
 
     if len(matches_idx1) < min_matched_peak:
         return np.zeros(0, dtype=np.int64), np.zeros(0, dtype=np.int64), np.zeros(0, dtype=np.float32)
@@ -138,7 +144,6 @@ def score_matches(matches_idx1: np.ndarray, matches_idx2: np.ndarray,
 def cosine_similarity(qry_spec: np.ndarray, ref_spec: np.ndarray,
                       tolerance: float = 0.1,
                       min_matched_peak: int = 1,
-                      analog_search: bool = False,  # unused
                       sqrt_transform: bool = True,
                       penalty: float = 0.,
                       shift: float = 0.0):
@@ -155,14 +160,12 @@ def cosine_similarity(qry_spec: np.ndarray, ref_spec: np.ndarray,
         Tolerance for m/z matching.
     min_matched_peak: int
         Minimum number of matched peaks.
-    analog_search: bool
-        If True, use analog search.
     sqrt_transform: bool
         If True, use square root transformation.
     penalty: float
         Penalty for unmatched peaks. If set to 0, traditional cosine score; if set to 1, traditional reverse cosine score.
     shift: float
-        Shift for m/z values.
+        Shift for m/z values. If not 0, hybrid search is performed. shift = prec_mz(qry) - prec_mz(ref)
     """
     tolerance = np.float32(tolerance)
     penalty = np.float32(penalty)
@@ -190,24 +193,24 @@ def cosine_similarity(qry_spec: np.ndarray, ref_spec: np.ndarray,
 
 
 if __name__ == "__main__":
-    peaks1 = np.array([
-        [100., 0.7],
-        [150., 0.2],
-        [200., 0.1],
-        [201., 0.2]
-    ], dtype=np.float32)
 
-    peaks2 = np.array([
-        [105., 0.4],
-        [150., 0.2],
-        [190., 0.1],
-        [200., 0.5]
-    ], dtype=np.float32)
+    # Example usage
+    peaks1 = np.array([[50, 8.0], [70, 100.0], [80, 50.0], [100, 50.0]], dtype=np.float32)
+
+    peaks2 = np.array([[55, 38.0], [80, 66.0], [90, 999.0]], dtype=np.float32)
 
     # Example with standard cosine
     score, n_matches = cosine_similarity(peaks1, peaks2, tolerance=0.05, sqrt_transform=True, penalty=0)
     print(f"Standard Score: {score:.3f}, Matches: {n_matches}")
 
-    # Example with reverse cosine
-    score, n_matches = cosine_similarity(peaks1, peaks2, tolerance=0.05, sqrt_transform=True, penalty=0.5)
+    # Example with enhanced reverse cosine
+    score, n_matches = cosine_similarity(peaks1, peaks2, tolerance=0.05, sqrt_transform=True, penalty=0.6)
+    print(f"Reverse Score: {score:.3f}, Matches: {n_matches}")
+
+    # Example with traditional reverse cosine
+    score, n_matches = cosine_similarity(peaks1, peaks2, tolerance=0.05, sqrt_transform=True, penalty=1)
+    print(f"Reverse Score: {score:.3f}, Matches: {n_matches}")
+
+    # Example with enhanced reverse cosine, analog search
+    score, n_matches = cosine_similarity(peaks1, peaks2, tolerance=0.05, sqrt_transform=True, penalty=0.6, shift=10)
     print(f"Reverse Score: {score:.3f}, Matches: {n_matches}")
