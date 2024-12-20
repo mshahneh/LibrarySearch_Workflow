@@ -5,7 +5,7 @@ params.inputlibraries = "data/libraries"
 params.inputspectra = "data/spectra"
 
 // Parameters
-params.searchtool = "gnps" // blink, gnps
+params.searchtool = "gnps" // blink, gnps, gnps_new
 
 params.topk = 1
 
@@ -30,9 +30,6 @@ params.analog_max_shift = 1999
 
 // GNPS_New Parameters
 params.search_algorithm = "cos"
-params.rel_int_threshold = 0.0
-params.prec_mz_removal_da = 1.5
-params.max_peak_num = 50
 params.peak_transformation = 'sqrt'
 params.unmatched_penalty_factor = 0.6
 
@@ -101,10 +98,7 @@ process searchDataGNPSNew{
         --frag_tol $params.fragment_tolerance \
         --min_score $params.library_min_similarity \
         --min_matched_peak $params.library_min_matched_peaks \
-        --rel_int_threshold $params.rel_int_threshold \
-        --prec_mz_removal_da $params.prec_mz_removal_da \
         --peak_transformation $params.peak_transformation \
-        --max_peak_num $params.max_peak_num \
         --unmatched_penalty_factor $params.unmatched_penalty_factor
     """
 }

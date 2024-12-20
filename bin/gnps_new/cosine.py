@@ -109,28 +109,26 @@ def score_matches(matches_idx1: np.ndarray, matches_idx2: np.ndarray,
     if used_matches == 0:
         return 0.0, 0
 
-    # Calculate normalization factors
-    if sqrt_transform:
-        norm1 = np.sqrt(np.sum(np.sqrt(ref_spec[:, 1] * ref_spec[:, 1])))
-    else:
-        norm1 = np.sqrt(np.sum(ref_spec[:, 1] * ref_spec[:, 1]))
+    # # Sum intensities of matched peaks
+    # matched_intensities = np.zeros(used_matches, dtype=np.float32)
 
-    # Sum intensities of matched peaks
-    matched_intensities = np.zeros(used_matches, dtype=np.float32)
     # new intensities of qry peaks, matched peaks are the same, others are penalized
     new_qry_intensities = np.zeros(len(qry_spec), dtype=np.float32)
+
     match_idx = 0
     for i in range(len(qry_spec)):
         if used2[i]:
-            matched_intensities[match_idx] = qry_spec[i, 1]
+            # matched_intensities[match_idx] = qry_spec[i, 1]
             new_qry_intensities[i] = qry_spec[i, 1]
             match_idx += 1
         else:
             new_qry_intensities[i] = qry_spec[i, 1] * (1 - penalty)
 
     if sqrt_transform:
+        norm1 = np.sqrt(np.sum(np.sqrt(ref_spec[:, 1] * ref_spec[:, 1])))
         norm2 = np.sqrt(np.sum(np.sqrt(new_qry_intensities * new_qry_intensities)))
     else:
+        norm1 = np.sqrt(np.sum(ref_spec[:, 1] * ref_spec[:, 1]))
         norm2 = np.sqrt(np.sum(new_qry_intensities * new_qry_intensities))
 
     if norm1 == 0.0 or norm2 == 0.0:
@@ -195,9 +193,9 @@ def cosine_similarity(qry_spec: np.ndarray, ref_spec: np.ndarray,
 if __name__ == "__main__":
 
     # Example usage
-    peaks1 = np.array([[50, 8.0], [70, 100.0], [80, 50.0], [100, 50.0]], dtype=np.float32)
+    peaks1 = np.array([[50, 8.0], [60, 100.0], [80, 50.0], [100, 50.0]], dtype=np.float32)
 
-    peaks2 = np.array([[55, 38.0], [80, 66.0], [90, 999.0]], dtype=np.float32)
+    peaks2 = np.array([[55, 38.0], [70, 50.0], [80, 66.0], [90, 100.0]], dtype=np.float32)
 
     # Example with standard cosine
     score, n_matches = cosine_similarity(peaks1, peaks2, tolerance=0.05, sqrt_transform=True, penalty=0)
