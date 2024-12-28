@@ -41,13 +41,8 @@ TOOL_FOLDER = "$moduleDir/bin"
 MODULES_FOLDER = "$TOOL_FOLDER/NextflowModules"
 params.publishDir = "./nf_output"
 
-<<<<<<< HEAD
 include {summaryLibrary; searchDataGNPS; searchDataGNPSNew; searchDataBlink; 
  mergeResults; librarygetGNPSAnnotations; filtertop1Annotations;
-=======
-include {summaryLibrary; searchDataGNPS; searchDataBlink; mergeResults;
- librarygetGNPSAnnotations; filtertop1Annotations;
->>>>>>> a73715e (updated workflows)
   formatBlinkResults; chunkResults} from "$MODULES_FOLDER/nf_library_search_modules.nf" addParams(publishDir: params.publishDir)
 
 workflow Main{
