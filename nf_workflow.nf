@@ -56,6 +56,7 @@ workflow Main{
     analog_max_shift
     blink_ionization
     blink_minpredict
+    publishDir
 
     main:
     libraries_ch = Channel.fromPath(inputlibraries + "/*.mgf" )
@@ -65,7 +66,7 @@ workflow Main{
     library_summary_ch = summaryLibrary(libraries_ch)
 
     // Merging all these tsv files from library_summary_ch within nextflow
-    library_summary_merged_ch = library_summary_ch.collectFile(name: "library_summary.tsv", keepHeader: true)
+    library_summary_merged_ch = library_summary_ch.collectFile(name: "${publishDir}/library_summary.tsv", keepHeader: true)
     
     if(searchtool == "gnps"){
         // Perform cartesian product producing all combinations of library, spectra
@@ -118,6 +119,7 @@ workflow {
         params.analog_search,
         params.analog_max_shift,
         params.blink_ionization,
-        params.blink_minpredict
+        params.blink_minpredict,
+        params.publishDir
     )
 }
