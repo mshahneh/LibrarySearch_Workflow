@@ -76,7 +76,7 @@ workflow Main{
     library_summary_ch = summaryLibrary(libraries_ch)
 
     // Merging all these tsv files from library_summary_ch within nextflow
-    library_summary_merged_ch = library_summary_ch.collectFile(name: "library_summary.tsv", keepHeader: true)
+    library_summary_merged_ch = library_summary_ch.collectFile(name: "${publishDir}/library_summary.tsv", keepHeader: true)
     
     if(input_map.searchtool == "gnps"){
         // Perform cartesian product producing all combinations of library, spectra
