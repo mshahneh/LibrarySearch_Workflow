@@ -235,15 +235,13 @@ def read_mgf_spectrum(file_obj):
             continue
 
         if line == 'END IONS':
-            if spectrum['peaks']:  # Only return if we have peaks
+            if spectrum['peaks']:
                 this_peaks = np.asarray(spectrum['peaks'])
                 this_peaks[:, 1] = this_peaks[:, 1] / np.max(this_peaks[:, 1]) * 999
                 this_peaks = this_peaks[np.bitwise_and(this_peaks[:, 0] > 0, this_peaks[:, 1] > 0)]
                 spectrum['peaks'] = np.asarray(this_peaks, dtype=np.float32)
 
-                if len(spectrum['peaks']) > 0:
-                    return spectrum
-            break
+            return spectrum
 
         # Handle peak data
         if line and not line.startswith(('BEGIN', 'END')):
