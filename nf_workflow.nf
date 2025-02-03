@@ -73,7 +73,7 @@ process searchDataGNPS {
 
 process searchDataGNPSNew{
 
-    //publishDir "./nf_output", mode: 'copy'
+    publishDir "./nf_output", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env_gnps_new.yml"
 
