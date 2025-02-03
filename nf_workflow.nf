@@ -48,10 +48,29 @@ include {summaryLibrary; searchDataGNPS; searchDataGNPSNew; searchDataBlink;
 workflow Main{
     take:
     input_map
+    /*
+        The input map should contain the following parameters:
+        [inputlibraries
+        inputspectra
+        searchtool
+        topk
+        fragment_tolerance
+        pm_tolerance
+        library_min_cosine
+        library_min_matched_peaks
+        merge_batch_size
+        filtertostructures
+        filter_precursor
+        filter_window
+        analog_search
+        analog_max_shift
+        blink_ionization
+        blink_minpredict]
+        */
 
     main:
-    libraries_ch = Channel.fromPath(inputlibraries + "/*.mgf" )
-    spectra = Channel.fromPath(inputspectra + "/**", relative: true)
+    libraries_ch = Channel.fromPath(input_map.inputlibraries + "/*.mgf" )
+    spectra = Channel.fromPath(input_map.inputspectra + "/**", relative: true)
 
     // Lets create a summary for the library files
     library_summary_ch = summaryLibrary(libraries_ch)
@@ -95,7 +114,7 @@ workflow Main{
         merged_results = mergeResults(search_results.collect())
     }
 
-    annotation_results_ch = librarygetGNPSAnnotations(merged_results, library_summary_merged_ch, topk, filtertostructures)
+    annotation_results_ch = librarygetGNPSAnnotations(merged_results, library_summary_merged_ch, input_map.topk, input_map.filtertostructures)
 
     // Getting another output that is only the top 1
     filtertop1Annotations(annotation_results_ch)
@@ -122,7 +141,7 @@ workflow {
         analog_max_shift: params.analog_max_shift,
         blink_ionization: params.blink_ionization,
         blink_minpredict: params.blink_minpredict,
-        publishDir: params.publishDir
+        publish_dir: params.publish_dir
     ]
     
     Main(input_map)
