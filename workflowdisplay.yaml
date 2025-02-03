@@ -22,7 +22,7 @@ Views:
                 data: Ion_Source
             -   title: "Precursor m/z"
                 data: SpecMZ
-            -   title: "Cosine"
+            -   title: "Similarity Score"
                 data: MQScore
             -   title: "Shared Peaks"
                 data: SharedPeaks

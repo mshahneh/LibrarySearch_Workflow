@@ -1,7 +1,7 @@
 workflowname: librarysearch_workflow
 workflowdescription: librarysearch_workflow
 workflowlongdescription: This is a library search workflow for GNPS2
-workflowversion: "2024.09.03"
+workflowversion: "2025.02.03"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -33,13 +33,15 @@ parameterlist:
     - displayname: Search Parameters
       paramtype: section
 
-    - displayname: Similarity Tool
+    - displayname: Search Tool
       paramtype: select
       nf_paramname: searchtool
       formvalue: gnps
       options:
         - value: gnps
           display: gnps
+        - value: gnps_new
+          display: gnps_new
         - value: blink
           display: blink
 
@@ -57,10 +59,10 @@ parameterlist:
       formvalue: "0.5"
       tooltip: "fragment_tolerance"
 
-    - displayname: Library Minimum Cosine
+    - displayname: Library Minimum Similarity Score
       paramtype: text
-      nf_paramname: library_min_cosine
-      formplaceholder: Enter the library_min_cosine
+      nf_paramname: library_min_similarity
+      formplaceholder: Enter the library minimum similarity score
       formvalue: "0.7"
 
     - displayname: Library Minimum Matched Peaks
@@ -96,6 +98,42 @@ parameterlist:
           display: "No"
         - value: "1"
           display: "Yes"
+
+
+    - displayname: gnps_new Parameters
+      paramtype: section
+
+    - displayname: Searching Algorithm
+      paramtype: select
+      nf_paramname: search_algorithm
+      formvalue: cosine
+      options:
+        - value: cos
+          display: cosine
+        - value: rev_cos
+          display: reverse cosine
+        - value: entropy
+          display: entropy similarity
+        - value: rev_entropy
+          display: reverse entropy similarity
+
+    - displayname: Peak intensity transformation
+      paramtype: select
+      nf_paramname: peak_transformation
+      formvalue: sqrt
+      options:
+        - value: none
+          display: No peak transformation applied
+        - value: sqrt
+          display: Square root transformation
+      tooltip: "Sqrt transformation is only applied when (reverse) cosine similarity is used. Entropy similarity is not designed for transformed intensities."
+
+    - displayname: Unmatched peak penalty factor (for reverse search)
+      paramtype: text
+      nf_paramname: unmatched_penalty_factor
+      formplaceholder: Enter the unmatched_penalty_factor (0-1, designed for reverse spectral search, peak intensity will be penalized by this factor if it is not matched)
+      formvalue: "0.6"
+      tooltip: "This only works for reverse search. Peak intensity will be penalized by this factor if it is unmatched. A factor of 0 means no penalty, ie. traditional cosine similarity. A factor of 1 means full penalty, ie. traditional reverse cosine similarity."
 
 
     - displayname: Blink Parameters

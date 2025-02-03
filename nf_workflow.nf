@@ -5,14 +5,14 @@ params.inputlibraries = "data/libraries"
 params.inputspectra = "data/spectra"
 
 // Parameters
-params.searchtool = "gnps" // blink, gnps
+params.searchtool = "gnps" // blink, gnps, gnps_new
 
 params.topk = 1
 
 params.fragment_tolerance = 0.5
 params.pm_tolerance = 2.0
 
-params.library_min_cosine = 0.7
+params.library_min_similarity = 0.7
 params.library_min_matched_peaks = 6
 
 params.merge_batch_size = 1000 //Not a UI parameter
@@ -27,6 +27,11 @@ params.filter_window = 1
 //TODO: Implement This
 params.analog_search = "0"
 params.analog_max_shift = 1999
+
+// GNPS_New Parameters
+params.search_algorithm = "cos"
+params.peak_transformation = 'sqrt'
+params.unmatched_penalty_factor = 0.6
 
 // Blink Parameters
 params.blink_ionization = "positive"
@@ -59,10 +64,42 @@ process searchDataGNPS {
         --pm_tolerance "$params.pm_tolerance" \
         --fragment_tolerance "$params.fragment_tolerance" \
         --topk $params.topk \
-        --library_min_cosine $params.library_min_cosine \
+        --library_min_cosine $params.library_min_similarity \
         --library_min_matched_peaks $params.library_min_matched_peaks \
         --analog_search "$params.analog_search" \
         --full_relative_query_path "$full_path"
+    """
+}
+
+process searchDataGNPSNew{
+
+    publishDir "./nf_output", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env_gnps_new.yml"
+
+    cache 'lenient'
+
+    input:
+    tuple file(input_library), file(input_spectrum)
+
+    output:
+    file 'search_results/*' optional true
+
+    """
+    mkdir -p search_results
+
+    python $TOOL_FOLDER/gnps_new/main_search.py \
+        --gnps_lib_mgf "$input_library" \
+        --qry_file "$input_spectrum" \
+        --algorithm $params.search_algorithm \
+        --analog_search $params.analog_search \
+        --analog_max_shift $params.analog_max_shift \
+        --pm_tol $params.pm_tolerance \
+        --frag_tol $params.fragment_tolerance \
+        --min_score $params.library_min_similarity \
+        --min_matched_peak $params.library_min_matched_peaks \
+        --peak_transformation $params.peak_transformation \
+        --unmatched_penalty_factor $params.unmatched_penalty_factor
     """
 }
 
@@ -225,7 +262,6 @@ process summaryLibrary {
 
 workflow {
     libraries_ch = Channel.fromPath(params.inputlibraries + "/*.mgf" )
-    spectra = Channel.fromPath(params.inputspectra + "/**", relative: true)
 
     // Lets create a summary for the library files
     library_summary_ch = summaryLibrary(libraries_ch)
@@ -234,6 +270,8 @@ workflow {
     library_summary_merged_ch = library_summary_ch.collectFile(name: "library_summary.tsv", keepHeader: true)
     
     if(params.searchtool == "gnps"){
+        spectra = Channel.fromPath(params.inputspectra + "/**", relative: true)
+
         // Perform cartesian product producing all combinations of library, spectra
         inputs = libraries_ch.combine(spectra)
 
@@ -249,6 +287,8 @@ workflow {
         merged_results = mergeResults(chunked_results.collect())
     }
     else if (params.searchtool == "blink"){
+        spectra = Channel.fromPath(params.inputspectra + "/**", relative: true)
+
         // Must add the prepend manually since relative does not inlcude the glob.
         spectra = spectra.map { it -> file(params.inputspectra + '/' + it) }
         search_results = searchDataBlink(libraries_ch, spectra)
@@ -256,6 +296,16 @@ workflow {
         formatted_results = formatBlinkResults(search_results)
 
         merged_results = mergeResults(formatted_results.collect())
+    }
+    else if (params.searchtool == "gnps_new"){
+        spectra_abs = Channel.fromPath(params.inputspectra + "/**", relative: false)
+
+        // Perform cartesian product producing all combinations of library, spectra
+        inputs = libraries_ch.combine(spectra_abs)
+
+        search_results = searchDataGNPSNew(inputs)
+
+        merged_results = mergeResults(search_results.collect())
     }
 
     annotation_results_ch = librarygetGNPSAnnotations(merged_results, library_summary_merged_ch)
