@@ -36,64 +36,70 @@ TOOL_FOLDER = "$moduleDir/bin"
 MODULES_FOLDER = "$TOOL_FOLDER/NextflowModules"
 params.publishDir = "./nf_output"
 
-include {summaryLibrary; searchDataGNPS; searchDataBlink; mergeResults; librarygetGNPSAnnotations; filtertop1Annotations; formatBlinkResults; chunkResults} from "$MODULES_FOLDER/nf_library_search_modules.nf" addParams(publishDir: params.publishDir)
+include {summaryLibrary; searchDataGNPS; searchDataBlink; mergeResults;
+ librarygetGNPSAnnotations; filtertop1Annotations;
+  formatBlinkResults; chunkResults} from "$MODULES_FOLDER/nf_library_search_modules.nf" addParams(publishDir: params.publishDir)
 
 workflow Main{
     take:
-    inputlibraries
-    inputspectra
-    searchtool
-    topk
-    fragment_tolerance
-    pm_tolerance
-    library_min_cosine
-    library_min_matched_peaks
-    merge_batch_size
-    filtertostructures
-    filter_precursor
-    filter_window
-    analog_search
-    analog_max_shift
-    blink_ionization
-    blink_minpredict
-    publishDir
+    input_map
+    /*
+        The input map should contain the following parameters:
+        [inputlibraries
+        inputspectra
+        searchtool
+        topk
+        fragment_tolerance
+        pm_tolerance
+        library_min_cosine
+        library_min_matched_peaks
+        merge_batch_size
+        filtertostructures
+        filter_precursor
+        filter_window
+        analog_search
+        analog_max_shift
+        blink_ionization
+        blink_minpredict]
+        */
 
     main:
-    libraries_ch = Channel.fromPath(inputlibraries + "/*.mgf" )
-    spectra = Channel.fromPath(inputspectra + "/**", relative: true)
+    libraries_ch = Channel.fromPath(input_map.inputlibraries + "/*.mgf" )
+    spectra = Channel.fromPath(input_map.inputspectra + "/**", relative: true)
 
     // Lets create a summary for the library files
     library_summary_ch = summaryLibrary(libraries_ch)
 
     // Merging all these tsv files from library_summary_ch within nextflow
-    library_summary_merged_ch = library_summary_ch.collectFile(name: "${publishDir}/library_summary.tsv", keepHeader: true)
+    library_summary_merged_ch = library_summary_ch.collectFile(name: "${input_map.publishDir}/library_summary.tsv", keepHeader: true)
     
-    if(searchtool == "gnps"){
+    if(input_map.searchtool == "gnps"){
         // Perform cartesian product producing all combinations of library, spectra
         inputs = libraries_ch.combine(spectra)
 
         // For each path, add the path as a string for file naming. Result is [library_file, spectrum_file, spectrum_path_as_str]
         // Must add the prepend manually since relative does not include the glob.
-        inputs = inputs.map { it -> [it[0], file(inputspectra + '/' + it[1]), it[1].toString().replaceAll("/","_"), it[1]] }
+        inputs = inputs.map { it -> [it[0], file(input_map.inputspectra + '/' + it[1]), it[1].toString().replaceAll("/","_"), it[1]] }
 
-        (search_results) = searchDataGNPS(inputs, pm_tolerance, fragment_tolerance, topk, library_min_cosine, library_min_matched_peaks, analog_search)
+        (search_results) = searchDataGNPS(inputs, input_map.pm_tolerance, input_map.fragment_tolerance, input_map.topk,
+         input_map.library_min_cosine, input_map.library_min_matched_peaks, input_map.analog_search)
 
-        chunked_results = chunkResults(search_results.buffer(size: merge_batch_size, remainder: true), topk)
+        chunked_results = chunkResults(search_results.buffer(size: input_map.merge_batch_size, remainder: true), input_map.topk)
        
         // Collect all the batched results and merge them at the end
-        merged_results = mergeResults(chunked_results.collect(), topk)
+        merged_results = mergeResults(chunked_results.collect(), input_map.topk)
     }
-    else if (searchtool == "blink"){
+    else if (input_map.searchtool == "blink"){
         // Must add the prepend manually since relative does not inlcude the glob.
-        spectra = spectra.map { it -> file(inputspectra + '/' + it) }
-        search_results = searchDataBlink(libraries_ch, spectra, blink_ionization, blink_minpredict, fragment_tolerance)
+        spectra = spectra.map { it -> file(input_map.inputspectra + '/' + it) }
+        search_results = searchDataBlink(libraries_ch, spectra, input_map.blink_ionization, input_map.blink_minpredict, input_map.fragment_tolerance)
 
         formatted_results = formatBlinkResults(search_results)
 
-        merged_results = mergeResults(formatted_results.collect(), topk)
+        merged_results = mergeResults(formatted_results.collect(), input_map.topk)
     }
 
-    annotation_results_ch = librarygetGNPSAnnotations(merged_results, library_summary_merged_ch, topk, filtertostructures)
+    annotation_results_ch = librarygetGNPSAnnotations(merged_results, library_summary_merged_ch, input_map.topk, input_map.filtertostructures)
 
     // Getting another output that is only the top 1
     filtertop1Annotations(annotation_results_ch)
@@ -103,23 +109,25 @@ workflow Main{
 }
 
 workflow {
-    Main(
-        params.inputlibraries,
-        params.inputspectra,
-        params.searchtool,
-        params.topk,
-        params.fragment_tolerance,
-        params.pm_tolerance,
-        params.library_min_cosine,
-        params.library_min_matched_peaks,
-        params.merge_batch_size,
-        params.filtertostructures,
-        params.filter_precursor,
-        params.filter_window,
-        params.analog_search,
-        params.analog_max_shift,
-        params.blink_ionization,
-        params.blink_minpredict,
-        params.publishDir
-    )
+    input_map = [
+        inputlibraries: params.inputlibraries,
+        inputspectra: params.inputspectra,
+        searchtool: params.searchtool,
+        topk: params.topk,
+        fragment_tolerance: params.fragment_tolerance,
+        pm_tolerance: params.pm_tolerance,
+        library_min_cosine: params.library_min_cosine,
+        library_min_matched_peaks: params.library_min_matched_peaks,
+        merge_batch_size: params.merge_batch_size,
+        filtertostructures: params.filtertostructures,
+        filter_precursor: params.filter_precursor,
+        filter_window: params.filter_window,
+        analog_search: params.analog_search,
+        analog_max_shift: params.analog_max_shift,
+        blink_ionization: params.blink_ionization,
+        blink_minpredict: params.blink_minpredict,
+        publishDir: params.publishDir
+    ]
+    
+    Main(input_map)
 }
