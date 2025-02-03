@@ -7,3 +7,4 @@ work
 nf_output
 *.nextflow*
 *__pycache__*
+data/
