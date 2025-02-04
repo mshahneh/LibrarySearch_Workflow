@@ -5,14 +5,14 @@ params.inputlibraries = "data/libraries"
 params.inputspectra = "data/spectra"
 
 // Parameters
-params.searchtool = "gnps" // blink, gnps
+params.searchtool = "gnps" // blink, gnps, gnps_new
 
 params.topk = 1
 
 params.fragment_tolerance = 0.5
 params.pm_tolerance = 2.0
 
-params.library_min_cosine = 0.7
+params.library_min_similarity = 0.7
 params.library_min_matched_peaks = 6
 
 params.merge_batch_size = 1000 //Not a UI parameter
@@ -28,6 +28,11 @@ params.filter_window = 1
 params.analog_search = "0"
 params.analog_max_shift = 1999
 
+// GNPS_New Parameters
+params.search_algorithm = "cos"
+params.peak_transformation = 'sqrt'
+params.unmatched_penalty_factor = 0.6
+
 // Blink Parameters
 params.blink_ionization = "positive"
 params.blink_minpredict = 0.01
@@ -36,8 +41,8 @@ TOOL_FOLDER = "$moduleDir/bin"
 MODULES_FOLDER = "$TOOL_FOLDER/NextflowModules"
 params.publishDir = "./nf_output"
 
-include {summaryLibrary; searchDataGNPS; searchDataBlink; mergeResults;
- librarygetGNPSAnnotations; filtertop1Annotations;
+include {summaryLibrary; searchDataGNPS; searchDataGNPSNew; searchDataBlink; 
+ mergeResults; librarygetGNPSAnnotations; filtertop1Annotations;
   formatBlinkResults; chunkResults} from "$MODULES_FOLDER/nf_library_search_modules.nf" addParams(publishDir: params.publishDir)
 
 workflow Main{
@@ -81,8 +86,7 @@ workflow Main{
         // Must add the prepend manually since relative does not include the glob.
         inputs = inputs.map { it -> [it[0], file(input_map.inputspectra + '/' + it[1]), it[1].toString().replaceAll("/","_"), it[1]] }
 
-        (search_results) = searchDataGNPS(inputs, input_map.pm_tolerance, input_map.fragment_tolerance, input_map.topk,
-         input_map.library_min_cosine, input_map.library_min_matched_peaks, input_map.analog_search)
+        (search_results) = searchDataGNPS(inputs, input_map.pm_tolerance, input_map.fragment_tolerance, input_map.topk, input_map.library_min_similarity, input_map.library_min_matched_peaks, input_map.analog_search)
 
         chunked_results = chunkResults(search_results.buffer(size: input_map.merge_batch_size, remainder: true), input_map.topk)
        
@@ -98,8 +102,19 @@ workflow Main{
 
         merged_results = mergeResults(formatted_results.collect(), input_map.topk)
     }
+    else if (input_map.searchtool == "gnps_new"){
+        spectra_abs = Channel.fromPath(input_map.inputspectra + "/**", relative: false)
 
-    annotation_results_ch = librarygetGNPSAnnotations(merged_results, library_summary_merged_ch, input_map.topk, input_map.filtertostructures)
+        // Perform cartesian product producing all combinations of library, spectra
+        inputs = libraries_ch.combine(spectra_abs)
+
+        search_results = searchDataGNPSNew(inputs, input_map.search_algorithm, input_map.analog_search, input_map.analog_max_shift, input_map.pm_tolerance, input_map.fragment_tolerance, input_map.library_min_similarity, input_map.library_min_matched_peaks, input_map.peak_transformation, input_map.unmatched_penalty_factor)
+
+        merged_results = mergeResults(search_results.collect())
+    }
+
+    annotation_results_ch = librarygetGNPSAnnotations(merged_results, library_summary_merged_ch,
+     input_map.topk, input_map.filtertostructures)
 
     // Getting another output that is only the top 1
     filtertop1Annotations(annotation_results_ch)
@@ -116,7 +131,7 @@ workflow {
         topk: params.topk,
         fragment_tolerance: params.fragment_tolerance,
         pm_tolerance: params.pm_tolerance,
-        library_min_cosine: params.library_min_cosine,
+        library_min_similarity: params.library_min_similarity,
         library_min_matched_peaks: params.library_min_matched_peaks,
         merge_batch_size: params.merge_batch_size,
         filtertostructures: params.filtertostructures,
@@ -126,7 +141,10 @@ workflow {
         analog_max_shift: params.analog_max_shift,
         blink_ionization: params.blink_ionization,
         blink_minpredict: params.blink_minpredict,
-        publishDir: params.publishDir
+        publishDir: params.publishDir,
+        search_algorithm: params.search_algorithm,
+        peak_transformation: params.peak_transformation,
+        unmatched_penalty_factor: params.unmatched_penalty_factor
     ]
     
     Main(input_map)
