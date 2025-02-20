@@ -110,7 +110,7 @@ workflow Main{
 
         search_results = searchDataGNPSNew(inputs, input_map.search_algorithm, input_map.analog_search, input_map.analog_max_shift, input_map.pm_tolerance, input_map.fragment_tolerance, input_map.library_min_similarity, input_map.library_min_matched_peaks, input_map.peak_transformation, input_map.unmatched_penalty_factor)
 
-        merged_results = mergeResults(search_results.collect())
+        merged_results = mergeResults(search_results.collect(), input_map.topk)
     }
 
     annotation_results_ch = librarygetGNPSAnnotations(merged_results, library_summary_merged_ch,
