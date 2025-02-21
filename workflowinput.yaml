@@ -1,7 +1,7 @@
 workflowname: librarysearch_workflow
 workflowdescription: librarysearch_workflow
 workflowlongdescription: This is a library search workflow for GNPS2
-workflowversion: "2025.02.03"
+workflowversion: "2025.02.21"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -51,6 +51,13 @@ parameterlist:
       formplaceholder: Enter the pm_tolerance
       formvalue: "2.0"
       tooltip: "pm_tolerance"
+      showif:
+        - condition:
+          - key: searchtool
+            value: gnps
+        - condition:
+          - key: searchtool
+            value: gnps_new
 
     - displayname: Fragment Ion Tolerance
       paramtype: text
@@ -58,18 +65,33 @@ parameterlist:
       formplaceholder: Enter the fragment_tolerance
       formvalue: "0.5"
       tooltip: "fragment_tolerance"
+      
 
     - displayname: Library Minimum Similarity Score
       paramtype: text
       nf_paramname: library_min_similarity
       formplaceholder: Enter the library minimum similarity score
       formvalue: "0.7"
+      showif:
+        - condition:
+          - key: searchtool
+            value: gnps
+        - condition:
+          - key: searchtool
+            value: gnps_new
 
     - displayname: Library Minimum Matched Peaks
       paramtype: text
       nf_paramname: library_min_matched_peaks
       formplaceholder: Enter the library_min_matched_peaks
       formvalue: "6"
+      showif:
+        - condition:
+          - key: searchtool
+            value: gnps
+        - condition:
+          - key: searchtool
+            value: gnps_new
 
     # Analog Search
     - displayname: Analog Search
@@ -81,6 +103,13 @@ parameterlist:
           display: "No"
         - value: "1"
           display: "Yes"
+      showif:
+        - condition:
+          - key: searchtool
+            value: gnps
+        - condition:
+          - key: searchtool
+            value: gnps_new
 
     - displayname: Top-K
       paramtype: text
@@ -102,6 +131,10 @@ parameterlist:
 
     - displayname: gnps_new Parameters
       paramtype: section
+      showif:
+        - condition:
+          - key: searchtool
+            value: gnps_new
 
     - displayname: Searching Algorithm
       paramtype: select
@@ -116,6 +149,10 @@ parameterlist:
           display: entropy similarity
         - value: rev_entropy
           display: reverse entropy similarity
+      showif:
+        - condition:
+          - key: searchtool
+            value: gnps_new
 
     - displayname: Peak intensity transformation
       paramtype: select
@@ -127,6 +164,10 @@ parameterlist:
         - value: sqrt
           display: Square root transformation
       tooltip: "Sqrt transformation is only applied when (reverse) cosine similarity is used. Entropy similarity is not designed for transformed intensities."
+      showif:
+        - condition:
+          - key: searchtool
+            value: gnps_new
 
     - displayname: Unmatched peak penalty factor (for reverse search)
       paramtype: text
@@ -134,10 +175,18 @@ parameterlist:
       formplaceholder: Enter the unmatched_penalty_factor (0-1, designed for reverse spectral search, peak intensity will be penalized by this factor if it is not matched)
       formvalue: "0.6"
       tooltip: "This only works for reverse search. Peak intensity will be penalized by this factor if it is unmatched. A factor of 0 means no penalty, ie. traditional cosine similarity. A factor of 1 means full penalty, ie. traditional reverse cosine similarity."
+      showif:
+        - condition:
+          - key: searchtool
+            value: gnps_new
 
 
     - displayname: Blink Parameters
       paramtype: section
+      showif:
+        - condition:
+          - key: searchtool
+            value: blink
 
     - displayname: Ion Mode
       paramtype: select
@@ -148,6 +197,10 @@ parameterlist:
           display: positive
         - value: negative
           display: negative
+      showif:
+        - condition:
+          - key: searchtool
+            value: blink
 
     - displayname: Minimum BLINK Predicted Score
       paramtype: text
@@ -155,5 +208,9 @@ parameterlist:
       formplaceholder: Enter the blink_minpredict
       formvalue: "0.0075"
       tooltip: "blink_minpredict"
+      showif:
+        - condition:
+          - key: searchtool
+            value: blink
 
     
